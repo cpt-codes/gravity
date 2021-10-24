@@ -21,5 +21,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
+# Compiled library code is here
+add_subdirectory(src)
+
 # Executable code is here
 add_subdirectory(apps)
