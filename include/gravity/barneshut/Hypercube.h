@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #include "gravity/Vector.h"
-#include "gravity/PointMass.h"
+#include "gravity/barneshut/Orthant.h"
 
 namespace gravity::barneshut
 {
@@ -14,6 +14,8 @@ namespace gravity::barneshut
     class Hypercube
     {
     public:
+        using orthant_t = Orthant<int, Dimensions>;
+
         // Hypercube with width and centre
         Hypercube(double width, Vector const& centre);
 
@@ -23,22 +25,12 @@ namespace gravity::barneshut
         // Centre of the Hypercube
         [[nodiscard]] Vector const& Centre() const { return centre_; }
 
-        // The orthant index of the node the Vector should belong to if it is bounded
-        // (inclusive) by the Hypercube. Throws if the Vector isn't bounded by the Hypercube.
-        [[nodiscard]] int Contains(Vector const& point) const;
+        // If the point is bounded (inclusive) by the Hypercube return it's orthant.
+        // Throws if the Vector isn't bounded by the Hypercube.
+        [[nodiscard]] orthant_t Contains(Vector const& point) const;
 
         // Subdivision of the Hypercube
-        [[nodiscard]] Hypercube Orthant(int orthant) const;
-
-        // Maximum number of orthants in a Hypercube
-        [[nodiscard]] static constexpr int Orthants()
-        {
-            using limits = std::numeric_limits<int>;
-
-            static_assert(Dimensions < limits::digits, "Maximum number of orthants exceeded");
-
-            return 1 << Dimensions;
-        }
+        [[nodiscard]] Hypercube Orthant(orthant_t const& orthant) const;
 
     private:
         double width_; // Width of the Hypercube

@@ -9,6 +9,7 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/Vector.h"
     "${PROJECT_INCLUDE_DIR}/gravity/PointMass.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Hypercube.h")
 
 # Boost components to use
