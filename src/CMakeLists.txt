@@ -28,6 +28,7 @@ endif ()
 
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(gravity ${HEADER_LIST}
+    Body.cpp
     barneshut/Hypercube.cpp)
 
 # We need this directory, and users of our library will need it too
