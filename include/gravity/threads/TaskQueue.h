@@ -7,7 +7,7 @@
 #include <queue>
 #include <utility>
 
-#include "gravity/threads/AbstractTask.h"
+#include "gravity/threads/ITask.h"
 #include "gravity/threads/Indicator.h"
 
 namespace gravity::threads
@@ -21,7 +21,7 @@ namespace gravity::threads
         TaskQueue();
 
         // Push a new value onto the queue.
-        void Push(std::shared_ptr<AbstractTask> task);
+        void Push(std::shared_ptr<ITask> task);
 
         // Whether the queue is empty or not.
         bool Empty() const;
@@ -34,7 +34,7 @@ namespace gravity::threads
         // retrieve a value immediately. Also returns immediately if the queue's indicator
         // has been set to false. Returns true if a value was successfully written
         // to the task parameter, false otherwise.
-        bool Pop(std::shared_ptr<AbstractTask>& task, bool block = true);
+        bool Pop(std::shared_ptr<ITask>& task, bool block = true);
 
         // Whether the queue is accepting and returning tasks or not.
         Indicator<bool> const& Closed() const { return closed_; }
@@ -50,7 +50,7 @@ namespace gravity::threads
 
     private:
         mutable std::mutex mutex_; // used to synchronise the queue
-        std::queue<std::shared_ptr<AbstractTask>> queue_;
+        std::queue<std::shared_ptr<ITask>> queue_;
         std::shared_ptr<std::condition_variable> task_cond_; // used to notify threads waiting on tasks
         Indicator<bool> closed_; // whether the queue is accepting and returning tasks or not
     };

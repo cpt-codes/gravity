@@ -2,12 +2,12 @@
 #define GRAVITY_INCLUDE_GRAVITY_BODY_H_
 
 #include "gravity/Vector.h"
-#include "gravity/PointMass.h"
+#include "gravity/IPointMass.h"
 
 namespace gravity
 {
     // Body with mass, displacement, velocity and acceleration
-    class Body final : public PointMass
+    class Body final : public IPointMass
     {
     public:
         // Body with mass m, displacement p and velocity v

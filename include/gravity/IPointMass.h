@@ -1,12 +1,12 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_POINTMASS_H_
-#define GRAVITY_INCLUDE_GRAVITY_POINTMASS_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_IPOINTMASS_H_
+#define GRAVITY_INCLUDE_GRAVITY_IPOINTMASS_H_
 
 #include "gravity/Vector.h"
 
 namespace gravity
 {
     // Abstract class for point masses
-    class PointMass
+    class IPointMass
     {
     public:
         // PointMass's mass
@@ -15,21 +15,21 @@ namespace gravity
         // PointMass's displacement Vector
         [[nodiscard]] virtual Vector const& Displacement() const = 0;
 
-        PointMass() = default;
+        IPointMass() = default;
 
-        virtual ~PointMass() = default;
+        virtual ~IPointMass() = default;
 
     protected:
         // The destructor of this class must be virtual hence the rule of five applies.
         // CppCoreGuidelines C.67 suggests protecting these special members to prevent
         // object slicing while allowing subclasses to implement their own.
 
-        PointMass(PointMass const&) = default;
-        PointMass& operator=(PointMass const&) = default;
+        IPointMass(IPointMass const&) = default;
+        IPointMass& operator=(IPointMass const&) = default;
 
-        PointMass(PointMass&&) noexcept = default;
-        PointMass& operator=(PointMass&&) noexcept = default;
+        IPointMass(IPointMass&&) noexcept = default;
+        IPointMass& operator=(IPointMass&&) noexcept = default;
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_POINTMASS_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_IPOINTMASS_H_

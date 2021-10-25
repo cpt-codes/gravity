@@ -8,11 +8,11 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 # List of headers
 set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/Vector.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/PointMass.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/IPointMass.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Body.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Hypercube.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/threads/AbstractTask.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Indicator.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h")

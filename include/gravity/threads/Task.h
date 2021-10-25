@@ -6,13 +6,13 @@
 #include <type_traits>
 #include <utility>
 
-#include "gravity/threads/AbstractTask.h"
+#include "gravity/threads/ITask.h"
 
 namespace gravity::threads
 {
     // Thread safe Task template for ambiguous functions.
     template<typename Func, typename... Args>
-    class Task final : public AbstractTask
+    class Task final : public ITask
     {
     public:
         using return_t = std::invoke_result_t<std::decay_t<Func>, std::decay_t<Args>...>;

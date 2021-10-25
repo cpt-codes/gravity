@@ -9,7 +9,7 @@ namespace gravity::threads
 
     }
 
-    void TaskQueue::Push(std::shared_ptr<AbstractTask> task)
+    void TaskQueue::Push(std::shared_ptr<ITask> task)
     {
         std::lock_guard const lock(mutex_);
 
@@ -41,7 +41,7 @@ namespace gravity::threads
         task_cond_->notify_all(); // notify all threads the queue is empty
     }
 
-    bool TaskQueue::Pop(std::shared_ptr<AbstractTask>& task, bool const block)
+    bool TaskQueue::Pop(std::shared_ptr<ITask>& task, bool const block)
     {
         std::unique_lock lock(mutex_);
 
