@@ -15,7 +15,8 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Indicator.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h")
+    "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/threads/ThreadPool.h")
 
 # Boost components to use
 set(BOOST_COMPONENTS "")
@@ -35,7 +36,8 @@ endif ()
 add_library(gravity ${HEADER_LIST}
     Body.cpp
     barneshut/Hypercube.cpp
-    threads/TaskQueue.cpp)
+    threads/TaskQueue.cpp
+    threads/ThreadPool.cpp)
 
 # We need this directory, and users of our library will need it too
 target_include_directories(gravity

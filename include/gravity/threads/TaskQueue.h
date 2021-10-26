@@ -23,6 +23,9 @@ namespace gravity::threads
         // Push a new value onto the queue.
         void Push(std::shared_ptr<ITask> task);
 
+        // Number of tasks in the queue.
+        unsigned int Size() const;
+
         // Whether the queue is empty or not.
         bool Empty() const;
 
@@ -36,8 +39,11 @@ namespace gravity::threads
         // to the task parameter, false otherwise.
         bool Pop(std::shared_ptr<ITask>& task, bool block = true);
 
+        // The reference to the Indicator data member is for all intents and purposes
+        // "C# readonly" as is not copyable nor movable reference.
+
         // Whether the queue is accepting and returning tasks or not.
-        Indicator<bool> const& Closed() const { return closed_; }
+        Indicator<bool>& Closed() { return closed_; }
 
         // Destructor ensures no threads are waiting.
         ~TaskQueue();

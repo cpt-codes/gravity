@@ -22,6 +22,12 @@ namespace gravity::threads
         task_cond_->notify_one(); // Notify a blocked thread a task available
     }
 
+    unsigned int TaskQueue::Size() const
+    {
+        std::lock_guard const lock(mutex_);
+        return queue_.size();
+    }
+
     bool TaskQueue::Empty() const
     {
         std::lock_guard const lock(mutex_);

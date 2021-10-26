@@ -40,6 +40,9 @@ namespace gravity::threads
             condition_->wait(lock, std::forward<Predicate>(predicate));
         }
 
+        // The operators provide the same functionality a normal atomic variable would
+        // by delegating to the member variable.
+
         T operator=(T state) noexcept // NOLINT(misc-unconventional-assign-operator)
         {
             Send(state);
@@ -50,6 +53,16 @@ namespace gravity::threads
         {
             return state_;
         }
+
+        // Indicator is explicitly non-copyable and non-movable.
+
+        ~Indicator() = default;
+
+        Indicator(Indicator const&) = delete;
+        Indicator(Indicator&&) noexcept = delete;
+
+        Indicator& operator=(Indicator const&) = delete;
+        Indicator& operator=(Indicator&&) noexcept = delete;
 
     private:
         std::atomic<T> state_;
