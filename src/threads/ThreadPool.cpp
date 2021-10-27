@@ -31,7 +31,7 @@ namespace gravity::threads
         return std::max(std::thread::hardware_concurrency(), 2u) - 1u;
     }
 
-    void ThreadPool::Submit(const std::shared_ptr<ITask>& task)
+    void ThreadPool::Submit(std::shared_ptr<ITask> const& task)
     {
         queue_.Push(task);
     }
