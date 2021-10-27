@@ -14,7 +14,6 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Hypercube.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/threads/Indicator.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ThreadPool.h")
 

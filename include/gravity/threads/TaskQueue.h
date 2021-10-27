@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "gravity/threads/ITask.h"
-#include "gravity/threads/Indicator.h"
 
 namespace gravity::threads
 {
@@ -18,7 +17,7 @@ namespace gravity::threads
     class TaskQueue
     {
     public:
-        TaskQueue();
+        TaskQueue() = default;
 
         // Push a new value onto the queue.
         void Push(std::shared_ptr<ITask> task);
@@ -39,11 +38,9 @@ namespace gravity::threads
         // to the task parameter, false otherwise.
         bool Pop(std::shared_ptr<ITask>& task, bool block = true);
 
-        // The reference to the Indicator data member is for all intents and purposes
-        // "C# readonly" as is not copyable nor movable reference.
-
         // Whether the queue is accepting and returning tasks or not.
-        Indicator<bool>& Closed() { return closed_; }
+        bool Closed() const;
+        void Closed(bool closed);
 
         // Destructor ensures no threads are waiting.
         ~TaskQueue();
@@ -55,10 +52,10 @@ namespace gravity::threads
         TaskQueue& operator=(TaskQueue&& other) noexcept = delete;
 
     private:
-        mutable std::mutex mutex_; // used to synchronise the queue
+        mutable std::mutex mutex_; // used to synchronise use of the TaskQueue
         std::queue<std::shared_ptr<ITask>> queue_;
-        std::shared_ptr<std::condition_variable> task_cond_; // used to notify threads waiting on tasks
-        Indicator<bool> closed_; // whether the queue is accepting and returning tasks or not
+        std::condition_variable changed_; // used to wait for and communicate the state of the queue across threads
+        bool closed_{}; // whether the queue is accepting and returning tasks or not
     };
 }
 

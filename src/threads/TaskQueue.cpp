@@ -2,13 +2,6 @@
 
 namespace gravity::threads
 {
-    TaskQueue::TaskQueue()
-        : task_cond_(std::make_shared<std::condition_variable>()),
-          closed_(false, task_cond_)
-    {
-
-    }
-
     void TaskQueue::Push(std::shared_ptr<ITask> task)
     {
         std::lock_guard const lock(mutex_);
@@ -19,7 +12,7 @@ namespace gravity::threads
         }
 
         queue_.push(std::move(task));
-        task_cond_->notify_one(); // Notify a blocked thread a task available
+        changed_.notify_one(); // notify one waiting thread a task available
     }
 
     unsigned int TaskQueue::Size() const
@@ -31,7 +24,6 @@ namespace gravity::threads
     bool TaskQueue::Empty() const
     {
         std::lock_guard const lock(mutex_);
-
         return queue_.empty();
     }
 
@@ -44,7 +36,7 @@ namespace gravity::threads
             queue_.pop();
         }
 
-        task_cond_->notify_all(); // notify all threads the queue is empty
+        changed_.notify_all(); // notify all waiting threads the queue is now empty
     }
 
     bool TaskQueue::Pop(std::shared_ptr<ITask>& task, bool const block)
@@ -53,20 +45,18 @@ namespace gravity::threads
 
         if (block)
         {
-            // the predicate protects against spurious wake-ups and is guarded by the lock.
-            // if timeout is reached the
-            task_cond_->wait(lock, [this]()
+            // The predicate protects against spurious wake-ups
+            changed_.wait(lock, [this]()
             {
                 return !queue_.empty() || closed_;
             });
 
-            // don't return a task if the queue has been closed
             if (closed_)
             {
                 return false;
             }
         }
-        else if (queue_.empty())
+        else if (queue_.empty() || closed_)
         {
             return false;
         }
@@ -78,9 +68,29 @@ namespace gravity::threads
         return true;
     }
 
+    // Using the mutex, instead of an atomic, ensures that the state of the queue
+    // being open or closed is properly synchronised with pushing and popping items
+    // to and from the queue.
+
+    bool TaskQueue::Closed() const
+    {
+        std::lock_guard const lock(mutex_);
+        return closed_;
+    }
+
+    void TaskQueue::Closed(bool closed)
+    {
+        {
+            std::lock_guard const lock(mutex_);
+            closed_ = true;
+        }
+
+        changed_.notify_all(); // notify all waiting threads the state of closed has changed
+    }
+
     TaskQueue::~TaskQueue()
     {
         // Stop blocking any threads before destructing
-        closed_ = true;
+        Closed(true);
     }
 }

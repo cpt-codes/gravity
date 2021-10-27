@@ -59,7 +59,7 @@ namespace gravity::threads
 
     void ThreadPool::JoinThreads()
     {
-        queue_.Closed() = true;
+        queue_.Closed(true);
 
         for (auto& thread : threads_)
         {
