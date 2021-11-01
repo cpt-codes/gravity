@@ -2,6 +2,7 @@
 #define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_
 
 #include <cstddef>
+#include <concepts>
 #include <stdexcept>
 #include <type_traits>
 
@@ -9,15 +10,26 @@
 
 namespace gravity::barneshut
 {
+    // Sign of an axis, may be Positive or Negative
+    enum class Sign : bool
+    {
+        Positive,
+        Negative
+    };
+
+    template<std::integral T>
+    T operator<<(Sign sign, T digit)
+    {
+        return static_cast<T>(sign) << digit;
+    }
+
     // Orthant of a hypercube represented as an index. If each axis in a hypercube is assigned
     // an index from 0 to N, then there are 2^N possible orthants. The index is computed by the
     // sign of each axis.
-    template<typename T, std::size_t N>
+    template<std::integral T, std::size_t N>
     class Orthant
     {
     public:
-        static_assert(std::is_integral_v<T>, "T must be integral type");
-
         Orthant() = default;
 
         explicit Orthant(T orthant)
@@ -42,38 +54,31 @@ namespace gravity::barneshut
         // Index of the Orthant between 0 and 2^N - 1
         [[nodiscard]] T Index() const { return orthant_; }
 
-        // Sign of an axis, may be Positive or Negative
-        enum class Axis : bool
-        {
-            Positive,
-            Negative
-        };
-
         // Make the i-th axis negative
-        void Axis(const T i, enum Axis sign)
+        void Axis(const T digit, Sign sign)
         {
-            CheckDigit(i);
-            orthant_ ^= static_cast<T>(sign) << i;
+            CheckDigit(digit);
+            orthant_ ^= sign << digit;
         }
 
         // Whether the i-th axis is negative or not
-        [[nodiscard]] enum Axis Axis(const T i) const
+        [[nodiscard]] Sign Axis(const T digit) const
         {
-            CheckDigit(i);
-            return static_cast<enum Axis>(static_cast<T>(Axis::Negative) << i & orthant_);
+            CheckDigit(digit);
+            return static_cast<Sign>(Sign::Negative << digit & orthant_);
         }
 
     private:
         // The orthant index is computed by mapping the i^th bit to an axis, where sign
         // is given by a 0 or 1. In 2D space: 0 : 0x00 : (+x, +y), 1 : 0x01 : (-x, +y),
         // 2 : 0x10: (+x, -y), 3 : 0x11 : (-x, -y).
-        int orthant_{};
+        T orthant_{};
 
         // Throw an exception if the i-th digit is out of range
-        static void CheckDigit(const T i)
+        static void CheckDigit(const T digit)
         {
 #ifndef NDEBUG
-            if (i < 0 || i >= N)
+            if (digit < 0 || digit >= N)
             {
                 throw std::out_of_range("Digit index out of range");
             }

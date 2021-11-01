@@ -16,7 +16,7 @@ namespace gravity::barneshut
         }
     }
 
-    Hypercube::orthant_t Hypercube::Contains(Vector const& point) const
+    orthant_t Hypercube::Contains(Vector const& point) const
     {
         if (point.size() != Dimensions)
         {
@@ -35,18 +35,18 @@ namespace gravity::barneshut
             }
             else if (x >= centre_[i])
             {
-                orthant.Axis(i, orthant_t::Axis::Negative);
+                orthant.Axis(i, Sign::Negative);
             }
             else
             {
-                orthant.Axis(i, orthant_t::Axis::Positive);
+                orthant.Axis(i, Sign::Positive);
             }
         }
 
         return orthant;
     }
 
-    Hypercube Hypercube::Orthant(orthant_t const& orthant) const
+    Hypercube Hypercube::ToOrthant(orthant_t const& orthant) const
     {
         double width = width_ / 2.0;
 
@@ -54,7 +54,7 @@ namespace gravity::barneshut
 
         for (int i = 0; i < Dimensions; i++)
         {
-            if (orthant.Axis(i) == orthant_t::Axis::Negative)
+            if (orthant.Axis(i) == Sign::Negative)
             {
                 centre[i] = centre_[i] - width / 2.0;
             }
