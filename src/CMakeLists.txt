@@ -12,6 +12,7 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/Body.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Hypercube.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/except/ErrorList.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h"
@@ -35,6 +36,7 @@ endif ()
 add_library(gravity ${HEADER_LIST}
     Body.cpp
     barneshut/Hypercube.cpp
+    except/ErrorList.cpp
     threads/TaskQueue.cpp
     threads/ThreadPool.cpp)
 

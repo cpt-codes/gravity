@@ -3,13 +3,14 @@
 
 #include <algorithm>
 #include <atomic>
-#include <iterator>
 #include <future>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <thread>
 #include <vector>
 
+#include "gravity/except/ErrorList.h"
 #include "gravity/threads/ITask.h"
 #include "gravity/threads/Task.h"
 #include "gravity/threads/TaskQueue.h"
@@ -44,9 +45,8 @@ namespace gravity::threads
 
         // Parallel for-each. Applies the given invocable object func to the result of each de-
         // referenced iterator in the range [being, end] in task_count threads. Returns a vector
-        // of shared futures. These futures can be used to check the success of each task and catch
-        // exceptions thrown from them.
-        template<std::random_access_iterator Iter, std::copy_constructible Func>
+        // of shared futures or blocks until all tasks are complete.
+        template<std::random_access_iterator Iter, std::copy_constructible Func, bool Block = true>
             requires std::invocable<Func, std::iter_value_t<Iter>>
         auto ForEach(Iter begin, Iter end, Func func, unsigned int task_count = 0);
 
@@ -63,10 +63,14 @@ namespace gravity::threads
         std::atomic_uint active_; // number of threads executing tasks
         TaskQueue queue_; // tasks submitted to the thread pool
 
+        using futures_t = std::vector<std::shared_future<void>>;
+
         // Runs in each thread. Acquires a task from the queue and executes it.
         void Worker();
 
         void JoinThreads();
+
+        static void CheckForErrors(futures_t const& futures);
     };
 
     template <typename Func, typename... Args> requires std::invocable<Func, Args...>
@@ -82,12 +86,10 @@ namespace gravity::threads
         return task->Future();
     }
 
-    template<std::random_access_iterator Iter, std::copy_constructible Func>
+    template<std::random_access_iterator Iter, std::copy_constructible Func, bool Block>
         requires std::invocable<Func, std::iter_value_t<Iter>>
     auto ThreadPool::ForEach(Iter begin, Iter end, Func func, unsigned int task_count)
     {
-        using futures_t = std::vector<std::shared_future<void>>;
-
         if (begin == end)
         {
             return futures_t();
@@ -126,11 +128,18 @@ namespace gravity::threads
                 }
             };
 
-            futures[i] = Submit(std::move(task), begin, end, func);
+            futures[i] = Submit(std::move(task));
             begin = end; // now use begin to store the beginning of the next block
         }
 
-        return futures;
+        if constexpr(Block)
+        {
+            CheckForErrors(futures);
+        }
+        else
+        {
+            return futures;
+        }
     }
 }
 

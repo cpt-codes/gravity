@@ -69,4 +69,32 @@ namespace gravity::threads
             }
         }
     }
+
+    void ThreadPool::CheckForErrors(futures_t const& futures)
+    {
+        except::ErrorList errors;
+
+        for (auto& future : futures)
+        {
+            if (!future.valid())
+            {
+                errors << "Invalid future";
+                continue;
+            }
+
+            try
+            {
+                future.get();
+            }
+            catch (...)
+            {
+                errors << std::current_exception();
+            }
+        }
+
+        if (!errors.Empty())
+        {
+            throw std::runtime_error(errors.Message());
+        }
+    }
 }
