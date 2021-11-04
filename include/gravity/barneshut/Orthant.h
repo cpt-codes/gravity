@@ -3,10 +3,8 @@
 
 #include <cstddef>
 #include <concepts>
+#include <limits>
 #include <stdexcept>
-#include <type_traits>
-
-#include "gravity/Vector.h"
 
 namespace gravity::barneshut
 {
@@ -51,9 +49,6 @@ namespace gravity::barneshut
             return 1 << N;
         }
 
-        // Index of the Orthant between 0 and 2^N - 1
-        [[nodiscard]] T Index() const { return orthant_; }
-
         // Make the i-th axis negative
         void Axis(const T digit, Sign sign)
         {
@@ -68,6 +63,12 @@ namespace gravity::barneshut
             return static_cast<Sign>(Sign::Negative << digit & orthant_);
         }
 
+        // Implicit conversion to type T
+        operator T() // NOLINT(google-explicit-constructor)
+        {
+            return orthant_;
+        }
+
     private:
         // The orthant index is computed by mapping the i^th bit to an axis, where sign
         // is given by a 0 or 1. In 2D space: 0 : 0x00 : (+x, +y), 1 : 0x01 : (-x, +y),
@@ -77,14 +78,14 @@ namespace gravity::barneshut
         // Throw an exception if the i-th digit is out of range
         static void CheckDigit(const T digit)
         {
-#ifndef NDEBUG
             if (digit < 0 || digit >= N)
             {
                 throw std::out_of_range("Digit index out of range");
             }
-#endif
         }
     };
+
+    using orthant_t = Orthant<std::size_t, Dimensions>;
 }
 
 #endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_

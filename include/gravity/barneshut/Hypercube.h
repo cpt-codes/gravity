@@ -10,8 +10,6 @@
 
 namespace gravity::barneshut
 {
-    using orthant_t = Orthant<int, Dimensions>;
-
     // "Immutable" class representing an N dimensional hypercube.
     class Hypercube
     {
@@ -30,7 +28,7 @@ namespace gravity::barneshut
         [[nodiscard]] orthant_t Contains(Vector const& point) const;
 
         // Orthant subdivision of this Hypercube
-        [[nodiscard]] Hypercube ToOrthant(orthant_t const& orthant) const;
+        [[nodiscard]] Hypercube Subdivision(orthant_t orthant) const;
 
     private:
         double width_; // Width of the Hypercube

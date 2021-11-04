@@ -46,7 +46,7 @@ namespace gravity::barneshut
         return orthant;
     }
 
-    Hypercube Hypercube::ToOrthant(orthant_t const& orthant) const
+    Hypercube Hypercube::Subdivision(orthant_t orthant) const
     {
         double width = width_ / 2.0;
 
