@@ -10,7 +10,7 @@
 
 namespace gravity::threads
 {
-    // Thread safe Task template for ambiguous functions.
+    // Task template for ambiguous functions
     template<typename Func, typename... Args>
     class Task final : public ITask
     {
@@ -19,24 +19,11 @@ namespace gravity::threads
 
         explicit Task(Func&& func, Args&&... args)
             : task_(std::bind_front(std::forward<Func>(func), std::forward<Args>(args)...)),
-            future_(task_.get_future())
-        {
-
-        }
+            future_(task_.get_future()) {}
 
         void Execute() override { task_(); }
 
         std::shared_future<return_t> const& Future() const { return future_; }
-
-        // Move only due to std::packaged_task
-
-        Task(Task const& other) = delete;
-        Task(Task&& other) noexcept = default;
-
-        Task& operator=(Task const& other) = delete;
-        Task& operator=(Task&& other) noexcept = default;
-
-        ~Task() override = default;
 
     private:
         std::packaged_task<return_t()> task_;
