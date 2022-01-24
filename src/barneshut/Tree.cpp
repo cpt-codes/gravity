@@ -18,11 +18,11 @@ namespace gravity::barneshut
             }
         }
 
-        void ThrowIfNull(std::shared_ptr<Body> const& p)
+        void ThrowIfNull(std::shared_ptr<Particle> const& ptr)
         {
-            if (!p)
+            if (!ptr)
             {
-                throw std::invalid_argument("Body pointer cannot be null");
+                throw std::invalid_argument("Particle pointer cannot be null");
             }
         }
     }
@@ -39,31 +39,31 @@ namespace gravity::barneshut
         return displacement_;
     }
 
-    void Tree::Insert(std::shared_ptr<Body> const& body)
+    void Tree::Insert(std::shared_ptr<Particle> const& particle)
     {
-        ThrowIfNull(body);
+        ThrowIfNull(particle);
 
-        auto orthant = cube_.Contains(body->Displacement());
+        auto orthant = cube_.Contains(particle->Displacement());
         auto& [node, is_leaf] = nodes_[orthant];
 
         if (!node) // no node
         {
-            node = body;
+            node = particle;
             is_leaf = true;
         }
         else if (is_leaf) // leaf node
         {
             auto subtree = std::make_shared<Tree>(cube_.Subdivision(orthant));
 
-            subtree->Insert(body);
-            subtree->Insert(std::static_pointer_cast<Body>(node));
+            subtree->Insert(particle);
+            subtree->Insert(std::static_pointer_cast<Particle>(node));
 
             node = subtree;
             is_leaf = false;
         }
         else // branch node
         {
-            std::static_pointer_cast<Tree>(node)->Insert(body);
+            std::static_pointer_cast<Tree>(node)->Insert(particle);
         }
 
         stale_ = true;

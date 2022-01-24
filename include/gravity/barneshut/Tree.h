@@ -7,14 +7,14 @@
 #include <utility>
 
 #include "gravity/IParticle.h"
-#include "gravity/Body.h"
+#include "gravity/Particle.h"
 #include "gravity/barneshut/Orthant.h"
 #include "gravity/barneshut/Hypercube.h"
 
 namespace gravity::barneshut
 {
     /*
-     * Barnes-Hut tree. Each leaf node represents a single body with a mass, position, velocity and
+     * Barnes-Hut tree. Each leaf node represents a single particle with a mass, position, velocity and
      * acceleration. Each branch node (subtree) contains 2 ^ N children contained within an N
      * dimensional hypercube, which is an orthant of its parent's. Each subtree approximates its
      * children by computing their centre of mass.
@@ -24,14 +24,14 @@ namespace gravity::barneshut
     public:
         explicit Tree(Hypercube cube);
 
-        // Total mass of the tree
+        // Total mass of all the particles in the tree
         [[nodiscard]] double Mass() const override;
 
-        // Centre of mass of the tree from the origin
+        // Centre of mass of all the particles in the tree from the origin
         [[nodiscard]] Vector const& Displacement() const override;
 
-        // Insert a Body into the Tree
-        void Insert(std::shared_ptr<Body> const& body);
+        // Insert a Particle into the Tree
+        void Insert(std::shared_ptr<Particle> const& particle);
 
         // Update the Tree's total mass and centre of mass
         void Update(bool force = false);

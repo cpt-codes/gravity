@@ -5,7 +5,7 @@
 
 namespace gravity
 {
-    // Abstract class for point masses
+    // Abstract class for static point masses
     class IParticle
     {
     public:

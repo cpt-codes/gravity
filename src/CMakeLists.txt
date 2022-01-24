@@ -9,7 +9,7 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/Vector.h"
     "${PROJECT_INCLUDE_DIR}/gravity/IParticle.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/Body.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/Particle.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Gravity.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Hypercube.h"
@@ -36,8 +36,6 @@ endif ()
 
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(gravity ${HEADER_LIST}
-    Body.cpp
-    Gravity.cpp
     barneshut/Hypercube.cpp
     barneshut/Tree.cpp
     except/ErrorList.cpp
