@@ -14,7 +14,7 @@ namespace gravity
     namespace ublas = boost::numeric::ublas;
 
     // Boost uBLAS vector of doubles
-    using Vector = ublas::vector<double>;
+    using Vector = ublas::vector<double, ublas::bounded_array<double, Dimensions>>;
 }
 
 #endif //GRAVITY_INCLUDE_GRAVITY_VECTOR_H_
