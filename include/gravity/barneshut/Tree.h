@@ -24,17 +24,17 @@ namespace gravity::barneshut
     public:
         explicit Tree(Hypercube cube);
 
-        // Total mass of the tree (kg)
-        [[nodiscard]] double Mass() const override { return mass_; }
+        // Total mass of the tree
+        [[nodiscard]] double Mass() const override;
 
-        // Centre of mass of the tree from the origin (m)
-        [[nodiscard]] Vector const& Displacement() const override { return displacement_; }
+        // Centre of mass of the tree from the origin
+        [[nodiscard]] Vector const& Displacement() const override;
 
         // Insert a Body into the Tree
         void Insert(std::shared_ptr<Body> const& body);
 
         // Update the Tree's total mass and centre of mass
-        void Update();
+        void Update(bool force = false);
 
     private:
         // Pointer to a particle and a flag for whether it is a leaf node (true) or not (false)
@@ -43,6 +43,7 @@ namespace gravity::barneshut
         // node_t per orthant
         using nodes_t = std::array<node_t, orthant_t::Max()>;
 
+        bool stale_{}; // State of the tree's centre of mass is up-to-date
         double mass_{}; // Total mass of the tree's children
         Vector displacement_; // Centre of mass of the tree's children
         nodes_t nodes_; // Child node for each orthant parented by this tree

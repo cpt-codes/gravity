@@ -8,19 +8,47 @@ namespace gravity::barneshut
 
     }
 
-    void Tree::Insert(std::shared_ptr<Body> const& body)
+    namespace
     {
-        if (!body)
+        void ThrowIfStale(bool stale)
         {
-            throw std::invalid_argument("Body pointer cannot be null");
+            if (stale)
+            {
+                throw std::logic_error("Centre of mass must be updated");
+            }
         }
 
-        auto orthant = cube_.Contains(body->Displacement());
-        auto& [particle, is_leaf] = nodes_[orthant];
-
-        if (!particle) // no node
+        void ThrowIfNull(std::shared_ptr<Body> const& p)
         {
-            particle = body;
+            if (!p)
+            {
+                throw std::invalid_argument("Body pointer cannot be null");
+            }
+        }
+    }
+
+    double Tree::Mass() const
+    {
+        ThrowIfStale(stale_);
+        return mass_;
+    }
+
+    Vector const& Tree::Displacement() const
+    {
+        ThrowIfStale(stale_);
+        return displacement_;
+    }
+
+    void Tree::Insert(std::shared_ptr<Body> const& body)
+    {
+        ThrowIfNull(body);
+
+        auto orthant = cube_.Contains(body->Displacement());
+        auto& [node, is_leaf] = nodes_[orthant];
+
+        if (!node) // no node
+        {
+            node = body;
             is_leaf = true;
         }
         else if (is_leaf) // leaf node
@@ -28,34 +56,42 @@ namespace gravity::barneshut
             auto subtree = std::make_shared<Tree>(cube_.Subdivision(orthant));
 
             subtree->Insert(body);
-            subtree->Insert(std::static_pointer_cast<Body>(particle));
+            subtree->Insert(std::static_pointer_cast<Body>(node));
 
-            particle = subtree;
+            node = subtree;
             is_leaf = false;
         }
         else // branch node
         {
-            std::static_pointer_cast<Tree>(particle)->Insert(body);
+            std::static_pointer_cast<Tree>(node)->Insert(body);
         }
+
+        stale_ = true;
     }
 
-    void Tree::Update()
+    void Tree::Update(bool const force)
     {
-        for (auto& [particle, is_leaf] : nodes_)
+        if (!force && !stale_)
         {
-            if (!particle) // no node
+            return;
+        }
+
+        for (auto& [node, is_leaf] : nodes_)
+        {
+            if (!node) // no node
             {
                 continue;
             }
             else if (!is_leaf) // branch node
             {
-                std::static_pointer_cast<Tree>(particle)->Update();
+                std::static_pointer_cast<Tree>(node)->Update();
             }
 
-            mass_ += particle->Mass();
-            displacement_ += particle->Mass() * particle->Displacement();
+            mass_ += node->Mass();
+            displacement_ += node->Mass() * node->Displacement();
         }
 
         displacement_ /= mass_;
+        stale_ = false;
     }
 }
