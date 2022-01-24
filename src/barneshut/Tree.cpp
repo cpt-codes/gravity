@@ -94,4 +94,41 @@ namespace gravity::barneshut
         displacement_ /= mass_;
         stale_ = false;
     }
+
+    void Tree::ComputeAcceleration(std::shared_ptr<Particle> const& particle, double const threshold,
+                            IGravity const& gravity) const
+    {
+        ThrowIfStale(stale_);
+        ThrowIfNull(particle);
+
+        if (threshold < 0.0)
+        {
+            throw std::invalid_argument("Approximation threshold < 0.0");
+        }
+
+        for (auto& [node, is_leaf] : nodes_)
+        {
+            if (node == particle)
+            {
+                continue;
+            }
+            else if(is_leaf) // leaf node
+            {
+                particle->Acceleration() += gravity.Acceleration(*node, *particle);
+            }
+            else // branch node
+            {
+                auto distance = ublas::norm_2(particle->Displacement() - node->Displacement());
+
+                if (cube_.Width() / distance < threshold) // Approximate using centre of mass
+                {
+                    particle->Acceleration() += gravity.Acceleration(*node, *particle);
+                }
+                else // Recursively add forces
+                {
+                    std::static_pointer_cast<Tree>(node)->ComputeAcceleration(particle, threshold, gravity);
+                }
+            }
+        }
+    }
 }

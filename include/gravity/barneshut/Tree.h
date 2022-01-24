@@ -8,6 +8,8 @@
 
 #include "gravity/IParticle.h"
 #include "gravity/Particle.h"
+#include "gravity/IGravity.h"
+#include "gravity/Plummer.h"
 #include "gravity/barneshut/Orthant.h"
 #include "gravity/barneshut/Hypercube.h"
 
@@ -35,6 +37,13 @@ namespace gravity::barneshut
 
         // Update the Tree's total mass and centre of mass
         void Update(bool force = false);
+
+        /// @brief Compute the force acting on the given Particle using the Barnes-Hut algorithm.
+        /// @param particle Particle to compute forces (acceleration) on.
+        /// @param threshold Determines the accuracy of the force computations.
+        /// @param gravity Method to compute gravitational forces.
+        void ComputeAcceleration(std::shared_ptr<Particle> const& particle, double threshold,
+                          IGravity const& gravity = Plummer()) const;
 
     private:
         // Pointer to a particle and a flag for whether it is a leaf node (true) or not (false)

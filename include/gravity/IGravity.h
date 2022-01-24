@@ -12,12 +12,12 @@ namespace gravity
     {
     public:
         // Compute the gravitational field that particle p1 is subject to due to particle p0.
-        [[nodiscard]] virtual Vector Field(IParticle const& p0, Particle const& p1) const = 0;
+        [[nodiscard]] virtual Vector Acceleration(IParticle const& p0, Particle const& p1) const = 0;
 
         // Compute the gravitational force that particle p1 is subject to due to particle p0.
         [[maybe_unused]] [[nodiscard]] Vector Force(IParticle const& p0, Particle const& p1) const
         {
-            return p1.Mass() * Field(p0, p1);
+            return p1.Mass() * Acceleration(p0, p1);
         }
 
         [[nodiscard]] double GravConst() const { return grav_; }

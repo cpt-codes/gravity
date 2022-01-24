@@ -8,7 +8,7 @@ namespace gravity
     class Plummer final : public IGravity
     {
     public:
-        [[nodiscard]] Vector Field(IParticle const& p0, Particle const& p1) const override
+        [[nodiscard]] Vector Acceleration(IParticle const& p0, Particle const& p1) const override
         {
             auto r = p0.Displacement() - p1.Displacement();
             auto R = ublas::norm_2(r);
