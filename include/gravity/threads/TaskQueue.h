@@ -52,7 +52,7 @@ namespace gravity::threads
         TaskQueue& operator=(TaskQueue&& other) noexcept = delete;
 
     private:
-        mutable std::mutex mutex_; // used to synchronise use of the TaskQueue
+        mutable std::mutex mutex_; // used to synchronize use of the TaskQueue
         std::queue<std::shared_ptr<ITask>> queue_;
         std::condition_variable changed_; // used to wait for and communicate the state of the queue across threads
         bool closed_{}; // whether the queue is accepting and returning tasks or not

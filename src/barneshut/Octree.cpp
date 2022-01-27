@@ -2,89 +2,150 @@
 
 namespace gravity::barneshut
 {
-    Octree::Octree(Hypercube cube)
-        : cube_(std::move(cube))
+    unsigned int Octree::DefaultGrowthLimit = 10;
+
+    Octree::Octree(Hypercube bounds)
+        : bounds_(std::move(bounds))
     {
 
-    }
-
-    namespace
-    {
-        void ThrowIfStale(bool stale)
-        {
-            if (stale)
-            {
-                throw std::logic_error("Centre of mass must be updated");
-            }
-        }
-
-        void ThrowIfNull(std::shared_ptr<Particle> const& ptr)
-        {
-            if (!ptr)
-            {
-                throw std::invalid_argument("Particle pointer cannot be null");
-            }
-        }
     }
 
     double Octree::Mass() const
     {
-        ThrowIfStale(stale_);
+        assert(!stale_);
         return mass_;
     }
 
     Vector const& Octree::Displacement() const
     {
-        ThrowIfStale(stale_);
+        assert(!stale_);
         return displacement_;
     }
 
-    void Octree::Insert(std::shared_ptr<Particle> const& particle)
+    void Octree::Build(std::vector<std::shared_ptr<Particle>> const& particles)
     {
-        ThrowIfNull(particle);
+        for (auto const& particle : particles)
+        {
+            if (!particle)
+            {
+                continue;
+            }
 
-        auto orthant = cube_.Contains(particle->Displacement());
-        auto& [node, is_leaf] = nodes_[orthant];
+            if(!GrowToFit(particle->Displacement()))
+            {
+                throw std::runtime_error("Could not grow Octree to fit particle.");
+            }
+
+            InsertWithoutUpdate(particle);
+        }
+
+        UpdateIfNeeded();
+    }
+
+    bool Octree::Insert(std::shared_ptr<Particle> const& particle)
+    {
+        if (!particle || !bounds_.Contains(particle->Displacement()))
+        {
+            return false;
+        }
+
+        InsertWithoutUpdate(particle);
+        UpdateIfNeeded();
+
+        return true;
+    }
+
+    bool Octree::GrowToFit(const Vector &point, unsigned int limit)
+    {
+        for (auto i = 0U; i < limit; ++i)
+        {
+            if (bounds_.Contains(point))
+            {
+                return true;
+            }
+
+            auto subtree = std::make_shared<Octree>(ShallowCopy());
+            auto orthant = bounds_.Orthant(point).Invert();
+
+            children_.fill(nullptr);
+            children_.at(orthant) = subtree;
+            bounds_ = bounds_.ExpandFrom(orthant);
+        }
+
+        return bounds_.Contains(point);
+    }
+
+    Octree::Octree(Octree const& other)
+        : bounds_(other.bounds_),
+          stale_(other.stale_),
+          mass_(other.mass_),
+          displacement_(other.displacement_)
+    {
+        DeepCopy(other.children_);
+    }
+
+    Octree& Octree::operator=(Octree const& other)
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        bounds_ = other.bounds_;
+        stale_ = other.stale_;
+        mass_ = other.mass_;
+        displacement_ = other.displacement_;
+
+        DeepCopy(other.children_);
+
+        return *this;
+    }
+
+    void Octree::InsertWithoutUpdate(std::shared_ptr<Particle> const& particle) // NOLINT(misc-no-recursion)
+    {
+        assert(particle != nullptr);
+
+        auto orthant = bounds_.Orthant(particle->Displacement());
+        auto& node = children_.at(orthant);
 
         if (!node) // no node
         {
             node = particle;
-            is_leaf = true;
         }
-        else if (is_leaf) // leaf node
+        else if (auto existing_particle= std::dynamic_pointer_cast<Particle>(node)) // leaf node
         {
-            auto subtree = std::make_shared<Octree>(cube_.Subdivision(orthant));
+            auto subtree = std::make_shared<Octree>(bounds_.ShrinkTo(orthant));
 
-            subtree->Insert(particle);
-            subtree->Insert(std::static_pointer_cast<Particle>(node));
+            subtree->InsertWithoutUpdate(particle);
+            subtree->InsertWithoutUpdate(existing_particle);
 
             node = subtree;
-            is_leaf = false;
         }
-        else // branch node
+        else if (auto subtree = std::dynamic_pointer_cast<Octree>(node)) // branch node
         {
-            std::static_pointer_cast<Octree>(node)->Insert(particle);
+            subtree->InsertWithoutUpdate(particle);
         }
 
         stale_ = true;
     }
 
-    void Octree::Update(bool const force)
+    void Octree::UpdateIfNeeded() // NOLINT(misc-no-recursion)
     {
-        if (!force && !stale_)
+        if (!stale_)
         {
             return;
         }
 
-        for (auto& [node, is_leaf] : nodes_)
+        for (auto& node : children_)
         {
             if (!node) // no node
             {
                 continue;
             }
-            else if (!is_leaf) // branch node
+
+            if (auto subtree= std::dynamic_pointer_cast<Octree>(node)) // branch node
             {
-                std::static_pointer_cast<Octree>(node)->Update();
+                subtree->UpdateIfNeeded();
             }
 
             mass_ += node->Mass();
@@ -95,40 +156,37 @@ namespace gravity::barneshut
         stale_ = false;
     }
 
-    void Octree::ComputeAcceleration(std::shared_ptr<Particle> const& particle, double const threshold,
-                            IGravity const& gravity) const
+    void Octree::DeepCopy(node_array_t const& nodes) // NOLINT(misc-no-recursion)
     {
-        ThrowIfStale(stale_);
-        ThrowIfNull(particle);
-
-        if (threshold < 0.0)
+        for (auto i = 0; i < nodes.size(); i++)
         {
-            throw std::invalid_argument("Approximation threshold < 0.0");
-        }
+            auto& node= children_[i];
+            auto const& other_node = nodes[i];
 
-        for (auto& [node, is_leaf] : nodes_)
-        {
-            if (node == particle)
+            if (!other_node)
             {
-                continue;
+                node = nullptr;
             }
-            else if(is_leaf) // leaf node
+            else if (std::dynamic_pointer_cast<Particle>(other_node))
             {
-                particle->Acceleration() += gravity.Acceleration(*node, *particle);
+                node = other_node; // shallow copy here is fine
             }
-            else // branch node
+            else if (auto subtree = std::dynamic_pointer_cast<Octree>(other_node))
             {
-                auto distance = ublas::norm_2(particle->Displacement() - node->Displacement());
-
-                if (cube_.Width() / distance < threshold) // Approximate using centre of mass
-                {
-                    particle->Acceleration() += gravity.Acceleration(*node, *particle);
-                }
-                else // Recursively add forces
-                {
-                    std::static_pointer_cast<Octree>(node)->ComputeAcceleration(particle, threshold, gravity);
-                }
+                node = std::make_shared<Octree>(*subtree); // must deep copy Octree
             }
         }
+    }
+
+    Octree Octree::ShallowCopy() const
+    {
+        Octree copy(bounds_);
+
+        copy.stale_ = stale_;
+        copy.mass_ = mass_;
+        copy.displacement_ = displacement_;
+        copy.children_ = children_;
+
+        return copy;
     }
 }

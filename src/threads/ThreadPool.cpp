@@ -86,9 +86,13 @@ namespace gravity::threads
             {
                 future.get();
             }
+            catch (std::exception const& e)
+            {
+                errors << e.what();
+            }
             catch (...)
             {
-                errors << std::current_exception();
+                errors << "Non-standard exception caught";
             }
         }
 

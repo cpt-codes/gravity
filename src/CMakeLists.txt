@@ -22,22 +22,12 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ThreadPool.h")
 
-# Boost components to use
-set(BOOST_COMPONENTS "")
-
-# Use Boost static libraries and enable multithreading
-set(Boost_USE_STATIC_LIBS ON)
-
-if (BOOST_COMPONENTS STREQUAL "")
-    # Fail if Boost not found
-    find_package(Boost 1.77.0 REQUIRED)
-else ()
-    # Fail if any components not found
-    find_package(Boost 1.77.0 COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-endif ()
+# Find Boost
+find_package(Boost 1.77.0 REQUIRED)
 
 # Make an automatic library - will be static or dynamic based on user setting
-add_library(gravity ${HEADER_LIST}
+add_library(gravity
+    ${HEADER_LIST}
     barneshut/Hypercube.cpp
     barneshut/Octree.cpp
     except/ErrorList.cpp
@@ -46,13 +36,11 @@ add_library(gravity ${HEADER_LIST}
 
 # We need this directory, and users of our library will need it too
 target_include_directories(gravity
-    PUBLIC ${PROJECT_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+    PUBLIC ${PROJECT_INCLUDE_DIR}
+    PUBLIC ${Boost_INCLUDE_DIRS})
 
 # All users of this library will need at least C++20
 target_compile_features(gravity PUBLIC cxx_std_20)
-
-# Link any libraries necessary
-target_link_libraries(gravity ${Boost_LIBRARIES})
 
 # Define a grouping for location files in IDE project generation
 source_group(

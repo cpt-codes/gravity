@@ -1,91 +1,91 @@
 #ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_
 #define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_
 
+#include <bitset>
 #include <cstddef>
-#include <concepts>
 #include <limits>
-#include <stdexcept>
+
+#include "gravity/Vector.h"
 
 namespace gravity::barneshut
 {
-    // Sign of an axis, may be Positive or Negative
-    enum class Sign : bool
-    {
-        Positive,
-        Negative
-    };
-
-    template<std::integral T>
-    T operator<<(Sign sign, T digit)
-    {
-        return static_cast<T>(sign) << digit;
-    }
-
-    // Orthant of a hypercube represented as an index. If each axis in a hypercube is assigned
-    // an index from 0 to N, then there are 2^N possible orthants. The index is computed by the
-    // sign of each axis.
-    template<std::integral T, std::size_t N>
+    /// @brief
+    ///     @c Orthant represents an orthant of an N dimensional box, which
+    ///     is determined by the orthogonality of each axis (+-, +-, +-,...)
+    ///     bounding the orthant.
+    /// @details
+    ///     An N dimensional box can be divided into 2 ** N orthants. Each
+    ///     @c Orthant can be mapped to a index from 0 to 2 ** N - 1. The
+    ///     alignment of each axis (aligned/positive or anti-aligned/negative)
+    ///     is used to calculate the index of each orthant. @c Dimensions is
+    ///     used as the dimensions of this class.
     class Orthant
     {
     public:
         Orthant() = default;
 
-        explicit Orthant(T orthant)
+        /// Converting constructor from an unsigned integral type.
+        template<std::unsigned_integral T>
+        Orthant(T const orthant) noexcept // NOLINT(google-explicit-constructor)
             : orthant_(orthant)
+        {}
+
+        /// The number of orthants in an N dimensional box.
+        static constexpr auto Max() noexcept
         {
-            if (orthant < 0 || orthant > Max())
-            {
-                throw std::invalid_argument("Invalid orthant");
-            }
+            static_assert(Dimensions > 0, "Dimensions cannot be zero.");
+
+            static_assert(
+                Dimensions < std::numeric_limits<std::size_t>::digits,
+                "Number of digits required cannot exceed that of the target architecture");
+
+            return 1 << Dimensions;
         }
 
-        // Maximum number of orthants in a hypercube
-        static constexpr T Max()
+        /// Set the alignment of the i-th axis. @c true if aligned/positive,
+        /// @c false if anti-aligned/negative.
+        Orthant& AlignAxis(const std::size_t digit, bool aligned = true)
         {
-            using limits = std::numeric_limits<T>;
-
-            static_assert(N < limits::digits, "Maximum number of orthants exceeded");
-
-            return 1 << N;
+            orthant_.set(digit, !aligned);
+            return *this;
         }
 
-        // Make the i-th axis negative
-        void Axis(const T digit, Sign sign)
+        /// Returns the alignment of the i-th axis. @c true if aligned/positive,
+        /// @c false if anti-aligned/negative.
+        [[nodiscard]] bool IsAxisAligned(const std::size_t digit) const
         {
-            CheckDigit(digit);
-            orthant_ ^= sign << digit;
+            return !orthant_.test(digit);
         }
 
-        // Whether the i-th axis is negative or not
-        [[nodiscard]] Sign Axis(const T digit) const
+        /// Invert all axes alignments. This will mirror the @c Orthant.
+        Orthant& Invert() noexcept
         {
-            CheckDigit(digit);
-            return static_cast<Sign>(Sign::Negative << digit & orthant_);
+            orthant_.flip();
+            return *this;
         }
 
-        // Implicit conversion to type T
-        operator T() // NOLINT(google-explicit-constructor)
+        /// Implicit conversion function to std::size_t for indexing arrays.
+        operator std::size_t() // NOLINT(google-explicit-constructor)
         {
-            return orthant_;
+            return orthant_.to_ullong();
         }
 
     private:
-        // The orthant index is computed by mapping the i^th bit to an axis, where sign
-        // is given by a 0 or 1. In 2D space: 0 : 0x00 : (+x, +y), 1 : 0x01 : (-x, +y),
-        // 2 : 0x10: (+x, -y), 3 : 0x11 : (-x, -y).
-        T orthant_{};
-
-        // Throw an exception if the i-th digit is out of range
-        static void CheckDigit(const T digit)
-        {
-            if (digit < 0 || digit >= N)
-            {
-                throw std::out_of_range("Digit index out of range");
-            }
-        }
+        /// @brief
+        ///     @c std::bitset representing the state of each axis (+-, +-, +-,...).
+        /// @details
+        ///     Each axis is represented by a single bit, whose alignment is either
+        ///     aligned/positive or anti-aligned/negative. These states are stored
+        ///     as 0s and 1s respectively. This is done so zero-initialisation
+        ///     corresponds to all axis initialising in the aligned state.
+        /// @example
+        ///     For example, in 2D:
+        ///         0 : 0b00 : (+x, +y),
+        ///         1 : 0b01 : (-x, +y),
+        ///         2 : 0b10 : (+x, -y),
+        ///         3 : 0b11 : (-x, -y)
+        std::bitset<Dimensions> orthant_{};
     };
-
-    using orthant_t = Orthant<std::size_t, Dimensions>;
 }
 
 #endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_

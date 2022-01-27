@@ -10,14 +10,19 @@ namespace gravity::except
     class ErrorList
     {
     public:
-        bool Empty() const { return empty_; }
-        std::string Message() const { return stream_.str(); }
+        /// Returns @c true if the @c ErrorList contains any errors,
+        /// @c false otherwise.
+        bool Empty() const;
+
+        /// Returns the error messages concatenated into a single message.
+        std::string Message() const;
+
+        /// Insert a new message into the ErrorList.
         ErrorList& operator<<(std::string const& message);
-        ErrorList& operator<<(std::exception_ptr const& except);
 
     private:
-        bool empty_{ true };
-        std::ostringstream stream_; // stream used to build error message
+        bool empty_{ true }; /// @c true if the stream is empty, @c false otherwise.
+        std::ostringstream stream_; /// string stream used to build error message.
     };
 }
 

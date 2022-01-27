@@ -2,6 +2,7 @@
 #define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
 
 #include <array>
+#include <list>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -9,54 +10,90 @@
 #include "gravity/IParticle.h"
 #include "gravity/Particle.h"
 #include "gravity/IGravity.h"
-#include "gravity/Plummer.h"
 #include "gravity/barneshut/Orthant.h"
 #include "gravity/barneshut/Hypercube.h"
 
 namespace gravity::barneshut
 {
-    /*
-     * Barnes-Hut tree. Each leaf node represents a single particle with a mass, position, velocity and
-     * acceleration. Each branch node (subtree) contains 2 ^ N children contained within an N
-     * dimensional hypercube, which is an orthant of its parent's. Each subtree approximates its
-     * children by computing their centre of mass.
-     */
+    /// @brief
+    ///     @c Octree is an octree designed to hold static objects.
+    ///
+    /// @details
+    ///     Each branch node (subtree) contains 2 ** N children contained
+    ///     within an N dimensional @c Hypercube, and is an orthant of its
+    ///     parent's @c Hypercube. Each leaf node represents a single @c
+    ///     Particle with a mass, position, velocity and acceleration. Each
+    ///     subtree then approximates its children by their centre of mass.
     class Octree final : public IParticle
     {
     public:
-        explicit Octree(Hypercube cube);
+        explicit Octree(Hypercube bounds);
 
-        // Total mass of all the particles in the tree
+        /// Total mass of all ancestors in the tree
         [[nodiscard]] double Mass() const override;
 
-        // Centre of mass of all the particles in the tree from the origin
+        /// Centre of mass of all the ancestors in the tree, from the origin
         [[nodiscard]] Vector const& Displacement() const override;
 
-        // Insert a Particle into the Octree
-        void Insert(std::shared_ptr<Particle> const& particle);
+        /// @brief
+        ///     Build the @c Octree from a std::vector of @p particles.
+        /// @details
+        ///     If any particle is not contained by the root node, then the
+        ///     tree is grown to fit using @c DefaultGrowthLimit.
+        /// @throws std::runtime_error
+        ///     If the growth limit is reached.
+        void Build(std::vector<std::shared_ptr<Particle>> const& particles);
 
-        // Update the Octree's total mass and centre of mass
-        void Update(bool force = false);
+        /// Insert a single @c Particle into the tree. If the @p particle was
+        /// inserted, returns @c true, otherwise @c false.
+        bool Insert(std::shared_ptr<Particle> const& particle);
 
-        /// @brief Compute the force acting on the given Particle using the Barnes-Hut algorithm.
-        /// @param particle Particle to compute forces (acceleration) on.
-        /// @param threshold Determines the accuracy of the force computations.
-        /// @param gravity Method to compute gravitational forces.
-        void ComputeAcceleration(std::shared_ptr<Particle> const& particle, double threshold,
-                          IGravity const& gravity = Plummer()) const;
+        /// @brief
+        ///     Grow the bounds of @c this, until it encapsulates @p point.
+        /// @details
+        ///     Does nothing if the @p point is already contained. Optionally,
+        ///     the @p limit sets a upper bound on the number of times the tree
+        ///     will attempt to grow to fit the particle.
+        /// @return
+        ///     @c true if the tree contains the @p point, otherwise @c false.
+        bool GrowToFit(Vector const& point, unsigned int limit = DefaultGrowthLimit);
+
+        /// Default limit on the number of times a tree can grow to fit a
+        /// point within its bounds.
+        static unsigned int DefaultGrowthLimit;
+
+        Octree(Octree const&);
+        Octree(Octree&&) noexcept = default;
+
+        Octree& operator=(Octree const&);
+        Octree& operator=(Octree&&) noexcept = default;
+
+        ~Octree() override = default;
 
     private:
-        // Pointer to a particle and a flag for whether it is a leaf node (true) or not (false)
-        using node_t = std::pair<std::shared_ptr<IParticle>, bool>;
+        /// Array of child nodes, these can be either @c Particle or @c Octree.
+        using node_array_t = std::array<std::shared_ptr<IParticle>, Orthant::Max()>;
 
-        // node_t per orthant
-        using nodes_t = std::array<node_t, orthant_t::Max()>;
+        /// Insert a @c Particle without updating the tree's total mass and
+        /// centre of mass.
+        void InsertWithoutUpdate(std::shared_ptr<Particle> const& particle);
 
-        bool stale_{}; // State of the tree's centre of mass is up-to-date
-        double mass_{}; // Total mass of the tree's children
-        Vector displacement_; // Centre of mass of the tree's children
-        nodes_t nodes_; // Child node for each orthant parented by this tree
-        Hypercube cube_; // The hypercube that contains this tree's children
+        /// Updates the total mass and centre of mass of this tree, from the
+        /// bottom-up, if the calculation is stale.
+        void UpdateIfNeeded();
+
+        /// Deep copy the other Octree's nodes
+        void DeepCopy(node_array_t const& nodes);
+
+        /// Shallow copy @c this. Pointers to children are shared with the
+        /// new @c Octree.
+        [[nodiscard]] Octree ShallowCopy() const;
+
+        bool stale_{}; /// @c true if the tree needs updating, otherwise @c false
+        double mass_{}; /// Total mass of the tree's children
+        Vector displacement_; /// Centre of mass of the tree's children
+        node_array_t children_; /// Child node for each orthant parented by this tree
+        Hypercube bounds_; /// The box that contains this tree's children
     };
 }
 

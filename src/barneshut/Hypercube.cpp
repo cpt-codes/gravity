@@ -2,68 +2,129 @@
 
 namespace gravity::barneshut
 {
-    Hypercube::Hypercube(double const width, Vector const& centre)
-        : width_(width), centre_(centre)
+    Hypercube::Hypercube(Vector const& centre, Vector const& width)
+        : extents_(width * 0.5),
+        centre_(centre)
     {
-        if (width <= 0.0 || !std::isfinite(width))
+        if(any_less_than_or_equal_to(extents_, 0.0))
         {
-            throw std::invalid_argument("Width must finite and > 0.0");
-        }
-
-        if (centre.size() != Dimensions)
-        {
-            throw std::invalid_argument("Vector has invalid size");
+            throw std::invalid_argument("Extents must be > 0.0");
         }
     }
 
-    orthant_t Hypercube::Contains(Vector const& point) const
+    Vector const& Hypercube::Extents() const
     {
-        if (point.size() != Dimensions)
+        return extents_;
+    }
+
+    Vector const& Hypercube::Centre() const
+    {
+        return centre_;
+    }
+
+    bool Hypercube::Contains(Vector const& point, double const looseness) const
+    {
+        for (auto i = 0U; i < Dimensions; ++i)
         {
-            throw std::invalid_argument("Vector has invalid size");
+            auto half_width = extents_[i];
+
+            if (looseness > 0.0)
+            {
+                half_width *= looseness;
+            }
+
+            if (point[i] > centre_[i] + half_width
+                || point[i] < centre_[i] - half_width)
+            {
+                return false;
+            }
         }
 
-        orthant_t orthant;
+        return true;
+    }
 
-        for (int i = 0; i < Dimensions; i++)
+    bool Hypercube::Contains(Hypercube const& box, const double looseness) const
+    {
+        for (auto i = 0U; i < Dimensions; ++i)
         {
-            auto const& x = point[i];
+            auto half_width = extents_[i];
 
-            if (x > centre_[i] + width_ / 2.0 || x < centre_[i] - width_ / 2.0)
+            if (looseness > 0.0)
             {
-                throw std::invalid_argument("Point out of bounds");
+                half_width *= looseness;
             }
-            else if (x >= centre_[i])
+
+            auto other_min = box.centre_[i] - box.extents_[i];
+            auto other_max = box.centre_[i] + box.extents_[i];
+            auto this_min = centre_[i] - half_width;
+            auto this_max = centre_[i] + half_width;
+
+            if ((other_min > this_max || other_min < this_min)
+                && (other_max > this_max || other_max < this_min))
             {
-                orthant.Axis(i, Sign::Negative);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    Orthant Hypercube::Orthant(Vector const& point) const
+    {
+        class Orthant orthant;
+
+        for (auto i = 0U; i < Dimensions; ++i)
+        {
+            if (point[i] >= centre_[i])
+            {
+                orthant.AlignAxis(i, true); // positive
             }
             else
             {
-                orthant.Axis(i, Sign::Positive);
+                orthant.AlignAxis(i, false); // negative
             }
         }
 
         return orthant;
     }
 
-    Hypercube Hypercube::Subdivision(orthant_t orthant) const
+    Hypercube Hypercube::ShrinkTo(class Orthant orthant) const
     {
-        double width = width_ / 2.0;
+        auto extents = extents_ / 2.0;
+        auto centre(centre_);
 
-        Vector centre(Dimensions);
-
-        for (int i = 0; i < Dimensions; i++)
+        for (auto i = 0U; i < Dimensions; ++i)
         {
-            if (orthant.Axis(i) == Sign::Negative)
+            if (orthant.IsAxisAligned(i)) // positive
             {
-                centre[i] = centre_[i] - width / 2.0;
+                centre[i] += extents[i];
             }
-            else
+            else // negative
             {
-                centre[i] = centre_[i] + width / 2.0;
+                centre[i] -= extents[i];
             }
         }
 
-        return { width, centre };
+        return { centre, extents };
+    }
+
+    Hypercube Hypercube::ExpandFrom(class Orthant orthant) const
+    {
+        auto extents = extents_ * 2.0;
+        auto centre(centre_);
+
+        for (auto i = 0U; i < Dimensions; ++i)
+        {
+            if (orthant.IsAxisAligned(i)) // positive
+            {
+                centre[i] -= extents[i];
+            }
+            else // negative
+            {
+                centre[i] += extents[i];
+            }
+        }
+
+        return { centre, extents };
     }
 }

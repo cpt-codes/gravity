@@ -2,6 +2,16 @@
 
 namespace gravity::except
 {
+    bool ErrorList::Empty() const
+    {
+        return empty_;
+    }
+
+    std::string ErrorList::Message() const
+    {
+        return stream_.str();
+    }
+
     ErrorList& ErrorList::operator<<(std::string const& message)
     {
         if (empty_)
@@ -13,22 +23,6 @@ namespace gravity::except
         stream_ << message << std::endl;
 
         return *this;
-    }
-
-    ErrorList& ErrorList::operator<<(std::exception_ptr const& except)
-    {
-        try
-        {
-            std::rethrow_exception(except);
-        }
-        catch(std::exception const& e)
-        {
-            return operator<<(e.what());
-        }
-        catch(...)
-        {
-            return operator<<("Non-standard exception caught");
-        }
     }
 }
 
