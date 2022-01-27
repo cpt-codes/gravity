@@ -1,8 +1,8 @@
-#include "gravity/barneshut/Tree.h"
+#include "gravity/barneshut/Octree.h"
 
 namespace gravity::barneshut
 {
-    Tree::Tree(Hypercube cube)
+    Octree::Octree(Hypercube cube)
         : cube_(std::move(cube))
     {
 
@@ -27,19 +27,19 @@ namespace gravity::barneshut
         }
     }
 
-    double Tree::Mass() const
+    double Octree::Mass() const
     {
         ThrowIfStale(stale_);
         return mass_;
     }
 
-    Vector const& Tree::Displacement() const
+    Vector const& Octree::Displacement() const
     {
         ThrowIfStale(stale_);
         return displacement_;
     }
 
-    void Tree::Insert(std::shared_ptr<Particle> const& particle)
+    void Octree::Insert(std::shared_ptr<Particle> const& particle)
     {
         ThrowIfNull(particle);
 
@@ -53,7 +53,7 @@ namespace gravity::barneshut
         }
         else if (is_leaf) // leaf node
         {
-            auto subtree = std::make_shared<Tree>(cube_.Subdivision(orthant));
+            auto subtree = std::make_shared<Octree>(cube_.Subdivision(orthant));
 
             subtree->Insert(particle);
             subtree->Insert(std::static_pointer_cast<Particle>(node));
@@ -63,13 +63,13 @@ namespace gravity::barneshut
         }
         else // branch node
         {
-            std::static_pointer_cast<Tree>(node)->Insert(particle);
+            std::static_pointer_cast<Octree>(node)->Insert(particle);
         }
 
         stale_ = true;
     }
 
-    void Tree::Update(bool const force)
+    void Octree::Update(bool const force)
     {
         if (!force && !stale_)
         {
@@ -84,7 +84,7 @@ namespace gravity::barneshut
             }
             else if (!is_leaf) // branch node
             {
-                std::static_pointer_cast<Tree>(node)->Update();
+                std::static_pointer_cast<Octree>(node)->Update();
             }
 
             mass_ += node->Mass();
@@ -95,7 +95,7 @@ namespace gravity::barneshut
         stale_ = false;
     }
 
-    void Tree::ComputeAcceleration(std::shared_ptr<Particle> const& particle, double const threshold,
+    void Octree::ComputeAcceleration(std::shared_ptr<Particle> const& particle, double const threshold,
                             IGravity const& gravity) const
     {
         ThrowIfStale(stale_);
@@ -126,7 +126,7 @@ namespace gravity::barneshut
                 }
                 else // Recursively add forces
                 {
-                    std::static_pointer_cast<Tree>(node)->ComputeAcceleration(particle, threshold, gravity);
+                    std::static_pointer_cast<Octree>(node)->ComputeAcceleration(particle, threshold, gravity);
                 }
             }
         }

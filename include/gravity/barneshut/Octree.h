@@ -1,5 +1,5 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_TREE_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_TREE_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
+#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
 
 #include <array>
 #include <memory>
@@ -21,10 +21,10 @@ namespace gravity::barneshut
      * dimensional hypercube, which is an orthant of its parent's. Each subtree approximates its
      * children by computing their centre of mass.
      */
-    class Tree final : public IParticle
+    class Octree final : public IParticle
     {
     public:
-        explicit Tree(Hypercube cube);
+        explicit Octree(Hypercube cube);
 
         // Total mass of all the particles in the tree
         [[nodiscard]] double Mass() const override;
@@ -32,10 +32,10 @@ namespace gravity::barneshut
         // Centre of mass of all the particles in the tree from the origin
         [[nodiscard]] Vector const& Displacement() const override;
 
-        // Insert a Particle into the Tree
+        // Insert a Particle into the Octree
         void Insert(std::shared_ptr<Particle> const& particle);
 
-        // Update the Tree's total mass and centre of mass
+        // Update the Octree's total mass and centre of mass
         void Update(bool force = false);
 
         /// @brief Compute the force acting on the given Particle using the Barnes-Hut algorithm.
@@ -60,4 +60,4 @@ namespace gravity::barneshut
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_TREE_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
