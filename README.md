@@ -1,2 +1,2 @@
 # gravity
-N-Body simulation using Barns-Hut method.
+N-Body simulation using Barnes-Hut method.
