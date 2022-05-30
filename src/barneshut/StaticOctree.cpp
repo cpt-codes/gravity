@@ -1,28 +1,28 @@
-#include "gravity/barneshut/Octree.h"
+#include "gravity/barneshut/StaticOctree.h"
 
 namespace gravity::barneshut
 {
-    unsigned int Octree::DefaultGrowthLimit = 10;
+    unsigned int StaticOctree::DefaultGrowthLimit = 10;
 
-    Octree::Octree(BoundingBox bounds)
+    StaticOctree::StaticOctree(BoundingBox bounds)
         : bounds_(std::move(bounds))
     {
 
     }
 
-    double Octree::Mass() const
+    double StaticOctree::Mass() const
     {
         assert(!stale_);
         return mass_;
     }
 
-    Vector const& Octree::Displacement() const
+    Vector const& StaticOctree::Displacement() const
     {
         assert(!stale_);
         return displacement_;
     }
 
-    void Octree::Build(std::vector<std::shared_ptr<Particle>> const& particles)
+    void StaticOctree::Build(std::vector<std::shared_ptr<Particle>> const& particles)
     {
         for (auto const& particle : particles)
         {
@@ -33,7 +33,7 @@ namespace gravity::barneshut
 
             if(!GrowToFit(particle->Displacement()))
             {
-                throw std::runtime_error("Could not grow Octree to fit particle.");
+                throw std::runtime_error("Could not grow StaticOctree to fit particle.");
             }
 
             InsertWithoutUpdate(particle);
@@ -42,7 +42,7 @@ namespace gravity::barneshut
         UpdateIfNeeded();
     }
 
-    bool Octree::Insert(std::shared_ptr<Particle> const& particle)
+    bool StaticOctree::Insert(std::shared_ptr<Particle> const& particle)
     {
         if (!particle || !bounds_.Contains(particle->Displacement()))
         {
@@ -55,7 +55,7 @@ namespace gravity::barneshut
         return true;
     }
 
-    bool Octree::GrowToFit(const Vector &point, unsigned int limit)
+    bool StaticOctree::GrowToFit(const Vector &point, unsigned int limit)
     {
         for (auto i = 0U; i < limit; ++i)
         {
@@ -64,7 +64,7 @@ namespace gravity::barneshut
                 return true;
             }
 
-            auto subtree = std::make_shared<Octree>(ShallowCopy());
+            auto subtree = std::make_shared<StaticOctree>(ShallowCopy());
             auto orthant = bounds_.Orthant(point).Invert();
 
             children_.fill(nullptr);
@@ -75,7 +75,7 @@ namespace gravity::barneshut
         return bounds_.Contains(point);
     }
 
-    Octree::Octree(Octree const& other)
+    StaticOctree::StaticOctree(StaticOctree const& other)
         : bounds_(other.bounds_),
           stale_(other.stale_),
           mass_(other.mass_),
@@ -84,7 +84,7 @@ namespace gravity::barneshut
         DeepCopy(other.children_);
     }
 
-    Octree& Octree::operator=(Octree const& other)
+    StaticOctree& StaticOctree::operator=(StaticOctree const& other)
     {
         if (this == &other)
         {
@@ -101,7 +101,7 @@ namespace gravity::barneshut
         return *this;
     }
 
-    void Octree::InsertWithoutUpdate(std::shared_ptr<Particle> const& particle) // NOLINT(misc-no-recursion)
+    void StaticOctree::InsertWithoutUpdate(std::shared_ptr<Particle> const& particle) // NOLINT(misc-no-recursion)
     {
         assert(particle != nullptr);
 
@@ -114,14 +114,14 @@ namespace gravity::barneshut
         }
         else if (auto existing_particle= std::dynamic_pointer_cast<Particle>(node)) // leaf node
         {
-            auto subtree = std::make_shared<Octree>(bounds_.ShrinkTo(orthant));
+            auto subtree = std::make_shared<StaticOctree>(bounds_.ShrinkTo(orthant));
 
             subtree->InsertWithoutUpdate(particle);
             subtree->InsertWithoutUpdate(existing_particle);
 
             node = subtree;
         }
-        else if (auto subtree = std::dynamic_pointer_cast<Octree>(node)) // branch node
+        else if (auto subtree = std::dynamic_pointer_cast<StaticOctree>(node)) // branch node
         {
             subtree->InsertWithoutUpdate(particle);
         }
@@ -129,7 +129,7 @@ namespace gravity::barneshut
         stale_ = true;
     }
 
-    void Octree::UpdateIfNeeded() // NOLINT(misc-no-recursion)
+    void StaticOctree::UpdateIfNeeded() // NOLINT(misc-no-recursion)
     {
         if (!stale_)
         {
@@ -143,7 +143,7 @@ namespace gravity::barneshut
                 continue;
             }
 
-            if (auto subtree= std::dynamic_pointer_cast<Octree>(node)) // branch node
+            if (auto subtree= std::dynamic_pointer_cast<StaticOctree>(node)) // branch node
             {
                 subtree->UpdateIfNeeded();
             }
@@ -156,7 +156,7 @@ namespace gravity::barneshut
         stale_ = false;
     }
 
-    void Octree::DeepCopy(node_array_t const& nodes) // NOLINT(misc-no-recursion)
+    void StaticOctree::DeepCopy(node_array_t const& nodes) // NOLINT(misc-no-recursion)
     {
         for (auto i = 0; i < nodes.size(); i++)
         {
@@ -171,16 +171,16 @@ namespace gravity::barneshut
             {
                 node = other_node; // shallow copy here is fine
             }
-            else if (auto subtree = std::dynamic_pointer_cast<Octree>(other_node))
+            else if (auto subtree = std::dynamic_pointer_cast<StaticOctree>(other_node))
             {
-                node = std::make_shared<Octree>(*subtree); // must deep copy Octree
+                node = std::make_shared<StaticOctree>(*subtree); // must deep copy StaticOctree
             }
         }
     }
 
-    Octree Octree::ShallowCopy() const
+    StaticOctree StaticOctree::ShallowCopy() const
     {
-        Octree copy(bounds_);
+        StaticOctree copy(bounds_);
 
         copy.stale_ = stale_;
         copy.mass_ = mass_;

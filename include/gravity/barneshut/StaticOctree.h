@@ -1,5 +1,5 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_STATICOCTREE_H_
+#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_STATICOCTREE_H_
 
 #include <array>
 #include <list>
@@ -16,7 +16,7 @@
 namespace gravity::barneshut
 {
     /// @brief
-    ///     @c Octree is an octree designed to hold static objects.
+    ///     @c StaticOctree is an octree designed to hold static objects.
     ///
     /// @details
     ///     Each branch node (subtree) contains 2 ** N children contained
@@ -24,10 +24,10 @@ namespace gravity::barneshut
     ///     parent's @c BoundingBox. Each leaf node represents a single @c
     ///     Particle with a mass, position, velocity and acceleration. Each
     ///     subtree then approximates its children by their centre of mass.
-    class Octree final : public IParticle
+    class StaticOctree final : public IParticle
     {
     public:
-        explicit Octree(BoundingBox bounds);
+        explicit StaticOctree(BoundingBox bounds);
 
         /// Total mass of all ancestors in the tree
         [[nodiscard]] double Mass() const override;
@@ -36,7 +36,7 @@ namespace gravity::barneshut
         [[nodiscard]] Vector const& Displacement() const override;
 
         /// @brief
-        ///     Build the @c Octree from a std::vector of @p particles.
+        ///     Build the @c StaticOctree from a std::vector of @p particles.
         /// @details
         ///     If any particle is not contained by the root node, then the
         ///     tree is grown to fit using @c DefaultGrowthLimit.
@@ -62,16 +62,16 @@ namespace gravity::barneshut
         /// point within its bounds.
         static unsigned int DefaultGrowthLimit;
 
-        Octree(Octree const&);
-        Octree(Octree&&) noexcept = default;
+        StaticOctree(StaticOctree const&);
+        StaticOctree(StaticOctree&&) noexcept = default;
 
-        Octree& operator=(Octree const&);
-        Octree& operator=(Octree&&) noexcept = default;
+        StaticOctree& operator=(StaticOctree const&);
+        StaticOctree& operator=(StaticOctree&&) noexcept = default;
 
-        ~Octree() override = default;
+        ~StaticOctree() override = default;
 
     private:
-        /// Array of child nodes, these can be either @c Particle or @c Octree.
+        /// Array of child nodes, these can be either @c Particle or @c StaticOctree.
         using node_array_t = std::array<std::shared_ptr<IParticle>, Orthant::Max()>;
 
         /// Insert a @c Particle without updating the tree's total mass and
@@ -82,12 +82,12 @@ namespace gravity::barneshut
         /// bottom-up, if the calculation is stale.
         void UpdateIfNeeded();
 
-        /// Deep copy the other Octree's nodes
+        /// Deep copy the other StaticOctree's nodes
         void DeepCopy(node_array_t const& nodes);
 
         /// Shallow copy @c this. Pointers to children are shared with the
-        /// new @c Octree.
-        [[nodiscard]] Octree ShallowCopy() const;
+        /// new @c StaticOctree.
+        [[nodiscard]] StaticOctree ShallowCopy() const;
 
         bool stale_{}; /// @c true if the tree needs updating, otherwise @c false
         double mass_{}; /// Total mass of the tree's children
@@ -97,4 +97,4 @@ namespace gravity::barneshut
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_STATICOCTREE_H_
