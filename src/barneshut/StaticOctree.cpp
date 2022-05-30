@@ -2,10 +2,9 @@
 
 namespace gravity::barneshut
 {
-    unsigned int StaticOctree::DefaultGrowthLimit = 10;
-
-    StaticOctree::StaticOctree(BoundingBox bounds)
-        : bounds_(std::move(bounds))
+    StaticOctree::StaticOctree(BoundingBox bounds, unsigned const growth_limit)
+        : bounds_(std::move(bounds)),
+        growth_limit_(growth_limit)
     {
 
     }
@@ -22,64 +21,63 @@ namespace gravity::barneshut
         return displacement_;
     }
 
-    void StaticOctree::Build(std::vector<std::shared_ptr<Particle>> const& particles)
+    std::vector<bool> StaticOctree::Insert(std::vector<std::shared_ptr<Particle>> const& particles)
     {
+        std::vector<bool> success;
+
+        success.reserve(particles.size());
+
         for (auto const& particle : particles)
         {
-            if (!particle)
+            if (!particle || !ContainsOrGrown(particle->Displacement()))
             {
+                success.push_back(false);
                 continue;
             }
 
-            if(!GrowToFit(particle->Displacement()))
-            {
-                throw std::runtime_error("Could not grow StaticOctree to fit particle.");
-            }
-
+            success.push_back(true);
             InsertWithoutUpdate(particle);
         }
 
-        UpdateIfNeeded();
+        UpdateIfStale();
+
+        return success;
     }
 
     bool StaticOctree::Insert(std::shared_ptr<Particle> const& particle)
     {
-        if (!particle || !bounds_.Contains(particle->Displacement()))
+        if (!particle || !ContainsOrGrown(particle->Displacement()))
         {
             return false;
         }
 
         InsertWithoutUpdate(particle);
-        UpdateIfNeeded();
+        UpdateIfStale();
 
         return true;
     }
 
-    bool StaticOctree::GrowToFit(const Vector &point, unsigned int limit)
+    std::size_t StaticOctree::GrowthLimit() const
     {
-        for (auto i = 0U; i < limit; ++i)
-        {
-            if (bounds_.Contains(point))
-            {
-                return true;
-            }
+        return growth_limit_;
+    }
 
-            auto subtree = std::make_shared<StaticOctree>(ShallowCopy());
-            auto orthant = bounds_.Orthant(point).Invert();
+    const BoundingBox &StaticOctree::Bounds() const
+    {
+        return bounds_;
+    }
 
-            children_.fill(nullptr);
-            children_.at(orthant) = subtree;
-            bounds_ = bounds_.ExpandFrom(orthant);
-        }
-
-        return bounds_.Contains(point);
+    StaticOctree::node_array_t const& StaticOctree::Children() const
+    {
+        return children_;
     }
 
     StaticOctree::StaticOctree(StaticOctree const& other)
         : bounds_(other.bounds_),
           stale_(other.stale_),
           mass_(other.mass_),
-          displacement_(other.displacement_)
+          displacement_(other.displacement_),
+          growth_limit_(other.growth_limit_)
     {
         DeepCopy(other.children_);
     }
@@ -93,6 +91,7 @@ namespace gravity::barneshut
 
         bounds_ = other.bounds_;
         stale_ = other.stale_;
+        growth_limit_ = other.growth_limit_;
         mass_ = other.mass_;
         displacement_ = other.displacement_;
 
@@ -112,9 +111,9 @@ namespace gravity::barneshut
         {
             node = particle;
         }
-        else if (auto existing_particle= std::dynamic_pointer_cast<Particle>(node)) // leaf node
+        else if (auto existing_particle = std::dynamic_pointer_cast<Particle>(node)) // leaf node
         {
-            auto subtree = std::make_shared<StaticOctree>(bounds_.ShrinkTo(orthant));
+            auto subtree = std::make_shared<StaticOctree>(bounds_.ShrinkTo(orthant), growth_limit_);
 
             subtree->InsertWithoutUpdate(particle);
             subtree->InsertWithoutUpdate(existing_particle);
@@ -129,7 +128,7 @@ namespace gravity::barneshut
         stale_ = true;
     }
 
-    void StaticOctree::UpdateIfNeeded() // NOLINT(misc-no-recursion)
+    void StaticOctree::UpdateIfStale() // NOLINT(misc-no-recursion)
     {
         if (!stale_)
         {
@@ -143,9 +142,9 @@ namespace gravity::barneshut
                 continue;
             }
 
-            if (auto subtree= std::dynamic_pointer_cast<StaticOctree>(node)) // branch node
+            if (auto subtree = std::dynamic_pointer_cast<StaticOctree>(node)) // branch node
             {
-                subtree->UpdateIfNeeded();
+                subtree->UpdateIfStale();
             }
 
             mass_ += node->Mass();
@@ -160,7 +159,7 @@ namespace gravity::barneshut
     {
         for (auto i = 0; i < nodes.size(); i++)
         {
-            auto& node= children_[i];
+            auto& node = children_[i];
             auto const& other_node = nodes[i];
 
             if (!other_node)
@@ -183,10 +182,49 @@ namespace gravity::barneshut
         StaticOctree copy(bounds_);
 
         copy.stale_ = stale_;
+        copy.growth_limit_ = growth_limit_;
         copy.mass_ = mass_;
         copy.displacement_ = displacement_;
         copy.children_ = children_;
 
         return copy;
+    }
+
+    bool StaticOctree::ContainsOrGrown(const Vector &point)
+    {
+        auto original = this;
+
+        for (auto i = 0U; i < GrowthLimit(); ++i)
+        {
+            if (bounds_.Contains(point))
+            {
+                return true;
+            }
+
+            // The BoundingBox must be expanded in the direction of the nearest
+            // Orthant. If the current bounds were the orthant of a larger
+            // BoundingBox, growing from the former to the latter would be
+            // equivalent top growing the bounds in the direction of the point.
+            // Hence, the nearest orthant inverted gives us the direction the
+            // bounds must be expanded in.
+
+            auto subtree = std::make_shared<StaticOctree>(ShallowCopy());
+            auto orthant = bounds_.Orthant(point).Invert();
+
+            children_.fill(nullptr);
+            children_.at(orthant) = subtree;
+            bounds_ = bounds_.ExpandFrom(orthant);
+        }
+
+        if (bounds_.Contains(point))
+        {
+            return true;
+        }
+
+        // Failed, so revert to the original via a shallow copy
+
+        *this = original->ShallowCopy();
+
+        return false;
     }
 }

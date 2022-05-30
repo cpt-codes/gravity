@@ -78,31 +78,6 @@ namespace gravity::barneshut
         return removed;
     }
 
-    BoundingBox const& DynamicOctree::Bounds() const
-    {
-        return bounds_;
-    }
-
-    std::vector<DynamicOctree> const& DynamicOctree::Children() const
-    {
-        return children_;
-    }
-
-    double DynamicOctree::Looseness() const
-    {
-        return looseness_;
-    }
-
-    double DynamicOctree::MinWidth() const
-    {
-        return min_width_;
-    }
-
-    std::size_t DynamicOctree::MaxShapes() const
-    {
-        return max_shapes_;
-    }
-
     bool DynamicOctree::LooselyContains(std::shared_ptr<IShape> const& shape) const
     {
         return bounds_.Contains(shape->Bounds(), Looseness());
