@@ -20,24 +20,18 @@ namespace gravity::barneshut
     ///     The dynamic octree has three configurable elements: the looseness
     ///     of the tree, minimum width of a node, and the maximum number of
     ///     children in a node.
-    ///
-    ///     The looseness is a multiplier applied to the bounds of a node when
-    ///     determining whether a shape is contained by said node. Hence, the
-    ///     shape is said to be "loosely" contained.
-    ///
-    ///     The minimum width of a node determines the maximum depth of a tree.
-    ///     It limits how many times the tree can branch from the root node.
-    ///
-    ///     The maximum number of children in a node determines how many shapes
-    ///     a leaf node can hold before it needs to branch.
     class DynamicOctree
     {
     public:
-        DynamicOctree() = default;
+        static constexpr auto DefaultLooseness = 1.5;
+        static constexpr auto DefaultMinWidth = 1.0;
+        static constexpr auto DefaultMaxShapes = 8U;
 
-        explicit DynamicOctree(BoundingBox bounds)
-            : bounds_(std::move(bounds))
-        {}
+        explicit DynamicOctree(
+            BoundingBox bounds,
+            double looseness = DefaultLooseness,
+            double min_width = DefaultMinWidth,
+            std::size_t max_shapes = DefaultMaxShapes);
 
         /// @brief
         ///     Insert a @p shape into the tree. The tree will be resized
@@ -72,16 +66,35 @@ namespace gravity::barneshut
         ///     All shapes that no longer fit within the tree.
         std::list<std::shared_ptr<IShape>> Update();
 
+        /// Bounds within which all children are contained
         [[nodiscard]] BoundingBox const& Bounds() const;
 
+        /// Children of this node in the octree
+        [[nodiscard]] std::vector<DynamicOctree> const& Children() const;
+
+        /// The looseness is a multiplier applied to the bounds of a node when
+        /// determining whether a shape is contained by said node. Hence, the
+        /// shape is said to be "loosely" contained. Shared between all nodes
+        /// of a tree.
+        [[nodiscard]] double Looseness() const;
+
+        /// The minimum width of a node determines the maximum depth of a tree.
+        /// It limits how many times the tree can branch from the root node.
+        /// Shared between all nodes of a tree.
+        [[nodiscard]] double MinWidth() const;
+
+        /// The maximum number of children in a node determines how many shapes
+        /// a leaf node can hold before it needs to branch. Shared between all
+        /// nodes of a tree.
+        [[nodiscard]] std::size_t MaxShapes() const;
+
     private:
+        double looseness_;
+        double min_width_;
+        std::size_t max_shapes_;
         BoundingBox bounds_;
         std::list<std::shared_ptr<IShape>> shapes_;
         std::vector<DynamicOctree> children_;
-
-        static double DefaultLooseness_;
-        static double DefaultMinWidth_;
-        static std::size_t DefaultMaxShapes_;
 
         /// Returns @c true if this node loosely contains the @p shape,
         /// @c false otherwise.
@@ -90,10 +103,6 @@ namespace gravity::barneshut
         /// Returns @c true if this node is a leaf node (i.e. no children),
         /// @c false otherwise.
         [[nodiscard]] bool IsLeaf() const;
-
-        /// Returns @c true if the node contains the maximum number of shapes,
-        /// @c false otherwise.
-        [[nodiscard]] bool HasMaxShapes() const;
 
         /// Returns @c true if the node's bounds are less than or equal to the
         /// minimum allowed width. @c false otherwise.

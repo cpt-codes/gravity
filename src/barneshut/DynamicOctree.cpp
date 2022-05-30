@@ -2,9 +2,15 @@
 
 namespace gravity::barneshut
 {
-    double DynamicOctree::DefaultLooseness_ = 1.5;
-    double DynamicOctree::DefaultMinWidth_ = 1.0;
-    std::size_t DynamicOctree::DefaultMaxShapes_ = 8;
+    DynamicOctree::DynamicOctree(BoundingBox bounds, double const looseness,
+                                 double const min_width, std::size_t const max_shapes)
+        : bounds_(std::move(bounds)),
+        looseness_(looseness),
+        min_width_(min_width),
+        max_shapes_(max_shapes)
+    {
+
+    }
 
     bool DynamicOctree::Insert(std::shared_ptr<IShape> const& shape) // NOLINT(misc-no-recursion)
     {
@@ -18,7 +24,7 @@ namespace gravity::barneshut
 
         if (IsLeaf())
         {
-            if (!HasMaxShapes() || IsMinWidth())
+            if (shapes_.size() < MaxShapes() || IsMinWidth())
             {
                 shapes_.push_back(shape);
                 return true;
@@ -77,9 +83,29 @@ namespace gravity::barneshut
         return bounds_;
     }
 
+    std::vector<DynamicOctree> const& DynamicOctree::Children() const
+    {
+        return children_;
+    }
+
+    double DynamicOctree::Looseness() const
+    {
+        return looseness_;
+    }
+
+    double DynamicOctree::MinWidth() const
+    {
+        return min_width_;
+    }
+
+    std::size_t DynamicOctree::MaxShapes() const
+    {
+        return max_shapes_;
+    }
+
     bool DynamicOctree::LooselyContains(std::shared_ptr<IShape> const& shape) const
     {
-        return bounds_.Contains(shape->Bounds(), DefaultLooseness_);
+        return bounds_.Contains(shape->Bounds(), Looseness());
     }
 
     bool DynamicOctree::IsLeaf() const
@@ -87,14 +113,9 @@ namespace gravity::barneshut
         return children_.empty();
     }
 
-    bool DynamicOctree::HasMaxShapes() const
-    {
-        return shapes_.size() >= DefaultMaxShapes_;
-    }
-
     bool DynamicOctree::IsMinWidth() const
     {
-        return any_less_than_or_equal_to(bounds_.Extents(), DefaultMinWidth_ / 2.0);
+        return any_less_than_or_equal_to(bounds_.Extents(), MinWidth() / 2.0);
     }
 
     bool DynamicOctree::ShouldMerge() const
@@ -105,13 +126,13 @@ namespace gravity::barneshut
         {
             count += child.shapes_.size();
 
-            if (count > DefaultMaxShapes_)
+            if (count > MaxShapes())
             {
                 return false;
             }
         }
 
-        return count <= DefaultMaxShapes_;
+        return count <= MaxShapes();
     }
 
     DynamicOctree& DynamicOctree::NearestChild(std::shared_ptr<IShape> const& shape)
@@ -131,7 +152,8 @@ namespace gravity::barneshut
 
         for (auto orthant = 0U; orthant < Orthant::Max(); ++orthant)
         {
-            children_.emplace_back(bounds_.ShrinkTo(orthant));
+            children_.emplace_back(bounds_.ShrinkTo(orthant), looseness_,
+                                   min_width_, max_shapes_);
         }
 
         // Move shapes into child nodes, where possible
