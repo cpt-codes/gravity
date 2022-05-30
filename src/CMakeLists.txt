@@ -15,7 +15,9 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/Plummer.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/BoundingBox.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/barneshut/IShape.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/StaticOctree.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/barneshut/DynamicOctree.h"
     "${PROJECT_INCLUDE_DIR}/gravity/except/ErrorList.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
@@ -30,6 +32,7 @@ add_library(gravity
     ${HEADER_LIST}
     barneshut/BoundingBox.cpp
     barneshut/StaticOctree.cpp
+    barneshut/DynamicOctree.cpp
     except/ErrorList.cpp
     threads/TaskQueue.cpp
     threads/ThreadPool.cpp)
