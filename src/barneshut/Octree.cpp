@@ -4,7 +4,7 @@ namespace gravity::barneshut
 {
     unsigned int Octree::DefaultGrowthLimit = 10;
 
-    Octree::Octree(Hypercube bounds)
+    Octree::Octree(BoundingBox bounds)
         : bounds_(std::move(bounds))
     {
 

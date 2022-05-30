@@ -11,7 +11,7 @@
 #include "gravity/Particle.h"
 #include "gravity/IGravity.h"
 #include "gravity/barneshut/Orthant.h"
-#include "gravity/barneshut/Hypercube.h"
+#include "gravity/barneshut/BoundingBox.h"
 
 namespace gravity::barneshut
 {
@@ -20,14 +20,14 @@ namespace gravity::barneshut
     ///
     /// @details
     ///     Each branch node (subtree) contains 2 ** N children contained
-    ///     within an N dimensional @c Hypercube, and is an orthant of its
-    ///     parent's @c Hypercube. Each leaf node represents a single @c
+    ///     within an N dimensional @c BoundingBox, and is an orthant of its
+    ///     parent's @c BoundingBox. Each leaf node represents a single @c
     ///     Particle with a mass, position, velocity and acceleration. Each
     ///     subtree then approximates its children by their centre of mass.
     class Octree final : public IParticle
     {
     public:
-        explicit Octree(Hypercube bounds);
+        explicit Octree(BoundingBox bounds);
 
         /// Total mass of all ancestors in the tree
         [[nodiscard]] double Mass() const override;
@@ -93,7 +93,7 @@ namespace gravity::barneshut
         double mass_{}; /// Total mass of the tree's children
         Vector displacement_; /// Centre of mass of the tree's children
         node_array_t children_; /// Child node for each orthant parented by this tree
-        Hypercube bounds_; /// The box that contains this tree's children
+        BoundingBox bounds_; /// The box that contains this tree's children
     };
 }
 

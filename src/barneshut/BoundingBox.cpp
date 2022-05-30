@@ -1,8 +1,8 @@
-#include "gravity/barneshut/Hypercube.h"
+#include "gravity/barneshut/BoundingBox.h"
 
 namespace gravity::barneshut
 {
-    Hypercube::Hypercube(Vector const& centre, Vector const& width)
+    BoundingBox::BoundingBox(Vector const& centre, Vector const& width)
         : extents_(width * 0.5),
         centre_(centre)
     {
@@ -12,17 +12,17 @@ namespace gravity::barneshut
         }
     }
 
-    Vector const& Hypercube::Extents() const
+    Vector const& BoundingBox::Extents() const
     {
         return extents_;
     }
 
-    Vector const& Hypercube::Centre() const
+    Vector const& BoundingBox::Centre() const
     {
         return centre_;
     }
 
-    bool Hypercube::Contains(Vector const& point, double const looseness) const
+    bool BoundingBox::Contains(Vector const& point, double const looseness) const
     {
         for (auto i = 0U; i < Dimensions; ++i)
         {
@@ -43,7 +43,7 @@ namespace gravity::barneshut
         return true;
     }
 
-    bool Hypercube::Contains(Hypercube const& box, const double looseness) const
+    bool BoundingBox::Contains(BoundingBox const& box, const double looseness) const
     {
         for (auto i = 0U; i < Dimensions; ++i)
         {
@@ -69,7 +69,7 @@ namespace gravity::barneshut
         return true;
     }
 
-    Orthant Hypercube::Orthant(Vector const& point) const
+    Orthant BoundingBox::Orthant(Vector const& point) const
     {
         class Orthant orthant;
 
@@ -88,7 +88,7 @@ namespace gravity::barneshut
         return orthant;
     }
 
-    Hypercube Hypercube::ShrinkTo(class Orthant orthant) const
+    BoundingBox BoundingBox::ShrinkTo(class Orthant orthant) const
     {
         auto extents = extents_ / 2.0;
         auto centre(centre_);
@@ -108,7 +108,7 @@ namespace gravity::barneshut
         return { centre, extents };
     }
 
-    Hypercube Hypercube::ExpandFrom(class Orthant orthant) const
+    BoundingBox BoundingBox::ExpandFrom(class Orthant orthant) const
     {
         auto extents = extents_ * 2.0;
         auto centre(centre_);

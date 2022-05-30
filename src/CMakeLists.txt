@@ -14,7 +14,7 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/Newtonian.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Plummer.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Orthant.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Hypercube.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/barneshut/BoundingBox.h"
     "${PROJECT_INCLUDE_DIR}/gravity/barneshut/Octree.h"
     "${PROJECT_INCLUDE_DIR}/gravity/except/ErrorList.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
@@ -28,7 +28,7 @@ find_package(Boost 1.77.0 REQUIRED)
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(gravity
     ${HEADER_LIST}
-    barneshut/Hypercube.cpp
+    barneshut/BoundingBox.cpp
     barneshut/Octree.cpp
     except/ErrorList.cpp
     threads/TaskQueue.cpp
