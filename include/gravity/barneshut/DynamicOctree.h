@@ -13,6 +13,14 @@
 
 namespace gravity::barneshut
 {
+    /// The state describing how a shape is bounded by a node within a
+    /// DynamicOctree
+    enum class Bounded : bool
+    {
+        Tightly, ///< The shape is bounded exactly by the node
+        Loosely ///< The shape is bounded by the loose bounds
+    };
+
     /// @brief
     ///     A dynamic octree which automatically branches and merges its nodes
     ///     when shapes are inserted or removed from the tree.
@@ -44,7 +52,7 @@ namespace gravity::barneshut
         ///     Multiple insertions of the same @c shape are not checked.
         /// @return
         ///     @c true if the @p shape was inserted, @c false otherwise.
-        bool Insert(std::shared_ptr<IShape> const& shape);
+        bool Insert(std::shared_ptr<IShape> const& shape, Bounded bounded = Bounded::Loosely);
 
         /// @brief
         ///     Remove a @p shape from the tree.
@@ -66,15 +74,27 @@ namespace gravity::barneshut
         ///     All shapes that no longer fit within the tree.
         std::list<std::shared_ptr<IShape>> Update();
 
+        /// Returns @c true if this node contains shapes, @c false otherwise.
+        [[nodiscard]] bool HasShapes() const;
+
+        /// Shrinks this node to one of its children, if possible.
+        void Shrink();
+
+        /// Grow the tree in the direction of the given point. A new root node
+        /// is created and swapped with @c this.
+        void Grow(Vector const& point);
+
+        /// Returns @c true if the tree contains the @p shape, @c false
+        /// otherwise. @p loosely determines whether @p shape is contained
+        /// loosely or tightly.
+        [[nodiscard]] bool Contains(std::shared_ptr<IShape> const& shape, Bounded bounded) const;
+
         /// Bounds within which all children are contained
         [[nodiscard]] BoundingBox const& Bounds() const { return bounds_; }
 
         /// Returns @c true if this node is a leaf node (i.e. no children),
         /// @c false otherwise.
         [[nodiscard]] bool IsLeaf() const { return children_.empty(); }
-
-        /// Returns @c true if this node contains shapes, @c false otherwise.
-        [[nodiscard]] bool HasShapes() const;
 
         /// Children of this node in the octree. Empty if this node is a leaf.
         [[nodiscard]] std::vector<DynamicOctree> const& Children() const { return children_; }
@@ -95,21 +115,10 @@ namespace gravity::barneshut
         /// nodes of a tree.
         [[nodiscard]] unsigned MaxShapes() const { return max_shapes_; }
 
-        /// Shrinks this node to one of its children, if possible.
-        void Shrink();
-
-        /// Grow the tree in the direction of the given point. A new root node
-        /// is created and swapped with @c this.
-        void Grow(Vector const& point);
-
         /// Enable efficient swapping of DynamicOctree with ADL use
         friend void swap(DynamicOctree& lhs, DynamicOctree& rhs);
 
     private:
-        /// Returns @c true if this node loosely contains the @p shape,
-        /// @c false otherwise.
-        [[nodiscard]] bool LooselyContains(std::shared_ptr<IShape> const& shape) const;
-
         /// Returns @c true if the node's bounds are less than or equal to the
         /// minimum allowed width. @c false otherwise.
         [[nodiscard]] bool IsMinWidth() const;

@@ -17,9 +17,9 @@ namespace gravity::barneshut
 
     }
 
-    bool DynamicOctree::Insert(std::shared_ptr<IShape> const& shape) // NOLINT(misc-no-recursion)
+    bool DynamicOctree::Insert(std::shared_ptr<IShape> const& shape, Bounded const bounded) // NOLINT(misc-no-recursion)
     {
-        if (!shape || !LooselyContains(shape))
+        if (!shape || !Contains(shape, bounded))
         {
             return false;
         }
@@ -175,6 +175,21 @@ namespace gravity::barneshut
         swap(*this, root);
     }
 
+    bool DynamicOctree::Contains(std::shared_ptr<IShape> const& shape, Bounded const bounded) const
+    {
+        if (!shape)
+        {
+            return false;
+        }
+
+        if (bounded == Bounded::Loosely)
+        {
+            return bounds_.Contains(shape->Bounds(), Looseness());
+        }
+
+        return bounds_.Contains(shape->Bounds());
+    }
+
     void swap(DynamicOctree& lhs, DynamicOctree& rhs)
     {
         // If a parent is swapped with its child, the parent will be contained
@@ -192,13 +207,6 @@ namespace gravity::barneshut
         swap(lhs.bounds_, rhs.bounds_);
         swap(lhs.shapes_, rhs.shapes_);
         swap(lhs.children_, rhs.children_);
-    }
-
-    bool DynamicOctree::LooselyContains(std::shared_ptr<IShape> const& shape) const
-    {
-        assert(shape != nullptr);
-
-        return bounds_.Contains(shape->Bounds(), Looseness());
     }
 
     bool DynamicOctree::IsMinWidth() const
@@ -293,7 +301,7 @@ namespace gravity::barneshut
 
         while (it != shapes_.end())
         {
-            if (LooselyContains(*it))
+            if (Contains(*it, Bounded::Loosely))
             {
                 ++it;
                 continue;
@@ -308,7 +316,7 @@ namespace gravity::barneshut
 
         while (it != removed_from_this)
         {
-            if(!Insert(*it))
+            if(!Insert(*it, Bounded::Tightly))
             {
                 ++it;
                 continue;
