@@ -192,7 +192,7 @@ namespace gravity::barneshut
 
     bool StaticOctree::ContainsOrGrown(const Vector &point)
     {
-        auto original = this;
+        auto original = ShallowCopy();
 
         for (auto i = 0U; i < GrowthLimit(); ++i)
         {
@@ -223,7 +223,7 @@ namespace gravity::barneshut
 
         // Failed, so revert to the original via a shallow copy
 
-        *this = original->ShallowCopy();
+        *this = std::move(original);
 
         return false;
     }

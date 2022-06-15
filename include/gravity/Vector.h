@@ -18,13 +18,6 @@ namespace gravity
     // Boost uBLAS vector of doubles
     using Vector = ublas::vector<double, ublas::bounded_array<double, Dimensions>>;
 
-    template<typename Func>
-        requires std::invocable<Func, Vector::value_type >
-    bool any_of(Vector const& vec, Func&& func)
-    {
-        return std::any_of(vec.begin(), vec.end(), func);
-    }
-
     // Arithmetic concept
     template <typename T>
     concept arithmetic = std::is_arithmetic_v<T>;
@@ -39,7 +32,7 @@ namespace gravity
             return value < scalar;
         };
 
-        return any_of(vec, less_than);
+        return std::ranges::any_of(vec, less_than);
     }
 
     // True if any of the vector's elements are less than or equal to the
@@ -52,7 +45,7 @@ namespace gravity
             return value <= scalar;
         };
 
-        return any_of(vec, less_than);
+        return std::ranges::any_of(vec, less_than);
     }
 }
 

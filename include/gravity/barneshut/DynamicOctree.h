@@ -23,15 +23,17 @@ namespace gravity::barneshut
     class DynamicOctree
     {
     public:
-        static constexpr auto DefaultLooseness = 1.5;
+        static constexpr auto DefaultLooseness = 1.25;
         static constexpr auto DefaultMinWidth = 1.0;
+        static constexpr auto DefaultGrowthLimit = 10U;
         static constexpr auto DefaultMaxShapes = 8U;
 
         explicit DynamicOctree(
             BoundingBox bounds,
             double looseness = DefaultLooseness,
             double min_width = DefaultMinWidth,
-            std::size_t max_shapes = DefaultMaxShapes);
+            unsigned growth_limit = DefaultGrowthLimit,
+            unsigned max_shapes = DefaultMaxShapes);
 
         /// @brief
         ///     Insert a @p shape into the tree. The tree will be resized
@@ -69,7 +71,14 @@ namespace gravity::barneshut
         /// Bounds within which all children are contained
         [[nodiscard]] BoundingBox const& Bounds() const { return bounds_; }
 
-        /// Children of this node in the octree
+        /// Returns @c true if this node is a leaf node (i.e. no children),
+        /// @c false otherwise.
+        [[nodiscard]] bool IsLeaf() const { return children_.empty(); }
+
+        /// Returns @c true if this node contains shapes, @c false otherwise.
+        [[nodiscard]] bool HasShapes() const;
+
+        /// Children of this node in the octree. Empty if this node is a leaf.
         [[nodiscard]] std::vector<DynamicOctree> const& Children() const { return children_; }
 
         /// The looseness is a multiplier applied to the bounds of a node when
@@ -83,26 +92,30 @@ namespace gravity::barneshut
         /// Shared between all nodes of a tree.
         [[nodiscard]] double MinWidth() const { return min_width_; }
 
+        /// A limit on the number of times a tree can grow to fit a shape
+        /// within its bounds.
+        [[nodiscard]] unsigned GrowthLimit() const { return growth_limit_; }
+
         /// The maximum number of children in a node determines how many shapes
         /// a leaf node can hold before it needs to branch. Shared between all
         /// nodes of a tree.
-        [[nodiscard]] std::size_t MaxShapes() const { return max_shapes_; }
+        [[nodiscard]] unsigned MaxShapes() const { return max_shapes_; }
+
+        /// Grow the tree to contain the given shape, up to the growth limit.
+        /// Returns @c true if this node was grown to fit the given shape,
+        /// @c false otherwise.
+        bool Grow(std::shared_ptr<IShape> const& shape);
+
+        /// Shrinks this node to one of its children, if possible.
+        void ShrinkToFit();
+
+        /// Enable efficient swapping of DynamicOctree with ADL use
+        friend void swap(DynamicOctree& lhs, DynamicOctree& rhs);
 
     private:
-        double looseness_{};
-        double min_width_{};
-        std::size_t max_shapes_{};
-        BoundingBox bounds_;
-        std::list<std::shared_ptr<IShape>> shapes_;
-        std::vector<DynamicOctree> children_;
-
         /// Returns @c true if this node loosely contains the @p shape,
         /// @c false otherwise.
         [[nodiscard]] bool LooselyContains(std::shared_ptr<IShape> const& shape) const;
-
-        /// Returns @c true if this node is a leaf node (i.e. no children),
-        /// @c false otherwise.
-        [[nodiscard]] bool IsLeaf() const;
 
         /// Returns @c true if the node's bounds are less than or equal to the
         /// minimum allowed width. @c false otherwise.
@@ -130,6 +143,22 @@ namespace gravity::barneshut
         /// @param[out] removed
         ///     Nodes removed are back-inserted into the list.
         void Update(std::list<std::shared_ptr<IShape>>& removed);
+
+        /// Grow the tree in the given direction. A new root node is created
+        /// and swapped with @this.
+        void Grow(Vector const& direction);
+
+        /// Returns @c true if only one of this node's children has shapes,
+        /// @c false otherwise.
+        bool OneChildHasShapes(Orthant& child) const;
+
+        double looseness_{}; ///< @c DynamicOctree::Looseness
+        double min_width_{}; ///< @ DynamicOctree::MinWidth
+        unsigned growth_limit_{}; ///< @c DynamicOctree::GrowthLimit
+        unsigned max_shapes_{}; ///< @c DynamicOctree::MaxShapes
+        BoundingBox bounds_; ///< @c DynamicOctree::Bounds
+        std::list<std::shared_ptr<IShape>> shapes_; ///< Shapes loosely contained by this node
+        std::vector<DynamicOctree> children_; ///< Contiguous array of child nodes
     };
 }
 

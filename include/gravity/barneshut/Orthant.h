@@ -65,7 +65,7 @@ namespace gravity::barneshut
         }
 
         /// Implicit conversion function to std::size_t for indexing arrays.
-        operator std::size_t() // NOLINT(google-explicit-constructor)
+        operator std::size_t() const // NOLINT(google-explicit-constructor)
         {
             return orthant_.to_ullong();
         }
