@@ -1,8 +1,8 @@
-#include "gravity/barneshut/DynamicOctree.h"
+#include "gravity/barneshut/Octree.h"
 
 namespace gravity::barneshut
 {
-    DynamicOctree::DynamicOctree
+    Octree::Octree
     (
         BoundingBox bounds,
         double const looseness,
@@ -17,7 +17,7 @@ namespace gravity::barneshut
 
     }
 
-    bool DynamicOctree::Insert(std::shared_ptr<IShape> const& shape, Bounded const bounded) // NOLINT(misc-no-recursion)
+    bool Octree::Insert(std::shared_ptr<IShape> const& shape, Bounded const bounded) // NOLINT(misc-no-recursion)
     {
         if (!shape || !Contains(shape, bounded))
         {
@@ -48,7 +48,7 @@ namespace gravity::barneshut
         return true;
     }
 
-    bool DynamicOctree::Remove(std::shared_ptr<IShape> const& shape) // NOLINT(misc-no-recursion)
+    bool Octree::Remove(std::shared_ptr<IShape> const& shape) // NOLINT(misc-no-recursion)
     {
         if (!shape)
         {
@@ -79,7 +79,7 @@ namespace gravity::barneshut
         return true;
     }
 
-    std::list<std::shared_ptr<IShape>> DynamicOctree::Update()
+    std::list<std::shared_ptr<IShape>> Octree::Update()
     {
         std::list<std::shared_ptr<IShape>> removed;
 
@@ -88,14 +88,14 @@ namespace gravity::barneshut
         return removed;
     }
 
-    bool DynamicOctree::HasShapes() const // NOLINT(misc-no-recursion)
+    bool Octree::HasShapes() const // NOLINT(misc-no-recursion)
     {
         if (!shapes_.empty())
         {
             return true;
         }
 
-        auto const has_shapes = [](DynamicOctree const& child) -> bool
+        auto const has_shapes = [](Octree const& child) -> bool
         {
             return child.HasShapes();
         };
@@ -103,7 +103,7 @@ namespace gravity::barneshut
         return std::ranges::any_of(children_, has_shapes);
     }
 
-    void DynamicOctree::Shrink()
+    void Octree::Shrink()
     {
         // Enable ADL
         using std::swap;
@@ -126,8 +126,8 @@ namespace gravity::barneshut
 
         auto& child = children_[orthant];
 
-        auto subtree = DynamicOctree(child.bounds_.ShrinkTo(orthant),
-                                     looseness_, min_width_, max_shapes_);
+        auto subtree = Octree(child.bounds_.ShrinkTo(orthant),
+                              looseness_, min_width_, max_shapes_);
 
         // Swap subtree with this, then this with child. this will contain the
         // previous contents of child (new root node), child will contain the
@@ -139,7 +139,7 @@ namespace gravity::barneshut
         swap(*this, child);
     }
 
-    void DynamicOctree::Grow(Vector const& point) // NOLINT(misc-no-recursion)
+    void Octree::Grow(Vector const& point) // NOLINT(misc-no-recursion)
     {
         // Enable ADL
         using std::swap;
@@ -158,8 +158,8 @@ namespace gravity::barneshut
 
         // Construct leaf node and branch to construct children
 
-        auto root = DynamicOctree(bounds_.ExpandFrom(orthant), looseness_,
-                                  min_width_, max_shapes_);
+        auto root = Octree(bounds_.ExpandFrom(orthant), looseness_,
+                           min_width_, max_shapes_);
 
         root.Branch();
 
@@ -175,7 +175,7 @@ namespace gravity::barneshut
         swap(*this, root);
     }
 
-    bool DynamicOctree::Contains(std::shared_ptr<IShape> const& shape, Bounded const bounded) const
+    bool Octree::Contains(std::shared_ptr<IShape> const& shape, Bounded const bounded) const
     {
         if (!shape)
         {
@@ -190,12 +190,12 @@ namespace gravity::barneshut
         return bounds_.Contains(shape->Bounds());
     }
 
-    void swap(DynamicOctree& lhs, DynamicOctree& rhs)
+    void swap(Octree& lhs, Octree& rhs)
     {
         // If a parent is swapped with its child, the parent will be contained
         // within its own vector of child nodes. If either destructor is
         // called, one will call the other and cause undefined behaviour.
-        // DynamicOctree's public interface only provides a const reference to
+        // Octree's public interface only provides a const reference to
         // a nodes children, so this is avoided.
 
         // Enable ADL
@@ -209,12 +209,12 @@ namespace gravity::barneshut
         swap(lhs.children_, rhs.children_);
     }
 
-    bool DynamicOctree::IsMinWidth() const
+    bool Octree::IsMinWidth() const
     {
         return any_less_than_or_equal_to(bounds_.Extents(), MinWidth() / 2.0);
     }
 
-    bool DynamicOctree::ShouldMerge() const
+    bool Octree::ShouldMerge() const
     {
         auto count = shapes_.size();
 
@@ -231,7 +231,7 @@ namespace gravity::barneshut
         return count <= MaxShapes();
     }
 
-    DynamicOctree& DynamicOctree::NearestChild(std::shared_ptr<IShape> const& shape)
+    Octree& Octree::NearestChild(std::shared_ptr<IShape> const& shape)
     {
         assert(!IsLeaf());
         assert(shape != nullptr);
@@ -239,7 +239,7 @@ namespace gravity::barneshut
         return children_.at(bounds_.Orthant(shape->Bounds().Centre()));
     }
 
-    void DynamicOctree::Branch() // NOLINT(misc-no-recursion)
+    void Octree::Branch() // NOLINT(misc-no-recursion)
     {
         assert(IsLeaf());
 
@@ -271,7 +271,7 @@ namespace gravity::barneshut
         }
     }
 
-    void DynamicOctree::Merge()
+    void Octree::Merge()
     {
         for (auto& child : children_)
         {
@@ -284,7 +284,7 @@ namespace gravity::barneshut
         children_.clear();
     }
 
-    void DynamicOctree::Update(std::list<std::shared_ptr<IShape>>& removed) // NOLINT(misc-no-recursion)
+    void Octree::Update(std::list<std::shared_ptr<IShape>>& removed) // NOLINT(misc-no-recursion)
     {
         // Recursively update children, collating all shapes, until we reach a leaf node
 
@@ -333,7 +333,7 @@ namespace gravity::barneshut
         }
     }
 
-    bool DynamicOctree::OneChildHasShapes(Orthant &child) const
+    bool Octree::OneChildHasShapes(Orthant &child) const
     {
         bool last_had_shapes{};
 

@@ -1,5 +1,5 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_DYNAMICOCTREE_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_DYNAMICOCTREE_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
+#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
 
 #include <array>
 #include <list>
@@ -14,7 +14,7 @@
 namespace gravity::barneshut
 {
     /// The state describing how a shape is bounded by a node within a
-    /// DynamicOctree
+    /// Octree
     enum class Bounded : bool
     {
         Tightly, ///< The shape is bounded exactly by the node
@@ -28,14 +28,14 @@ namespace gravity::barneshut
     ///     The dynamic octree has three configurable elements: the looseness
     ///     of the tree, minimum width of a node, and the maximum number of
     ///     children in a node.
-    class DynamicOctree
+    class Octree
     {
     public:
         static constexpr auto DefaultLooseness = 1.25;
         static constexpr auto DefaultMinWidth = 1.0;
         static constexpr auto DefaultMaxShapes = 8U;
 
-        explicit DynamicOctree(
+        explicit Octree(
             BoundingBox bounds,
             double looseness = DefaultLooseness,
             double min_width = DefaultMinWidth,
@@ -97,7 +97,7 @@ namespace gravity::barneshut
         [[nodiscard]] bool IsLeaf() const { return children_.empty(); }
 
         /// Children of this node in the octree. Empty if this node is a leaf.
-        [[nodiscard]] std::vector<DynamicOctree> const& Children() const { return children_; }
+        [[nodiscard]] std::vector<Octree> const& Children() const { return children_; }
 
         /// The looseness is a multiplier applied to the bounds of a node when
         /// determining whether a shape is contained by said node. Hence, the
@@ -115,8 +115,8 @@ namespace gravity::barneshut
         /// nodes of a tree.
         [[nodiscard]] unsigned MaxShapes() const { return max_shapes_; }
 
-        /// Enable efficient swapping of DynamicOctree with ADL use
-        friend void swap(DynamicOctree& lhs, DynamicOctree& rhs);
+        /// Enable efficient swapping of Octree with ADL use
+        friend void swap(Octree& lhs, Octree& rhs);
 
     private:
         /// Returns @c true if the node's bounds are less than or equal to the
@@ -132,7 +132,7 @@ namespace gravity::barneshut
         /// @details
         ///     The child's bounds do not necessarily encapsulate the shape,
         ///     only its axes do, hence it is the nearest child.
-        [[nodiscard]] DynamicOctree& NearestChild(std::shared_ptr<IShape> const& shape);
+        [[nodiscard]] Octree& NearestChild(std::shared_ptr<IShape> const& shape);
 
         /// Branches the current node. Shapes within this node are inserted
         /// into children, where possible.
@@ -141,7 +141,7 @@ namespace gravity::barneshut
         /// Shapes within child nodes are merged into @c this node.
         void Merge();
 
-        /// @copydoc DynamicOctree::Update()
+        /// @copydoc Octree::Update()
         /// @param[out] removed
         ///     Nodes removed are back-inserted into the list.
         void Update(std::list<std::shared_ptr<IShape>>& removed);
@@ -150,15 +150,15 @@ namespace gravity::barneshut
         /// @c false otherwise.
         bool OneChildHasShapes(Orthant& child) const;
 
-        double looseness_{}; ///< @c DynamicOctree::Looseness
-        double min_width_{}; ///< @ DynamicOctree::MinWidth
-        unsigned max_shapes_{}; ///< @c DynamicOctree::MaxShapes
-        BoundingBox bounds_; ///< @c DynamicOctree::Bounds
+        double looseness_{}; ///< @c Octree::Looseness
+        double min_width_{}; ///< @ Octree::MinWidth
+        unsigned max_shapes_{}; ///< @c Octree::MaxShapes
+        BoundingBox bounds_; ///< @c Octree::Bounds
         std::list<std::shared_ptr<IShape>> shapes_; ///< Shapes loosely contained by this node
-        std::vector<DynamicOctree> children_; ///< Contiguous array of child nodes
+        std::vector<Octree> children_; ///< Contiguous array of child nodes
     };
 }
 
 
 
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_DYNAMICOCTREE_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
