@@ -1,10 +1,11 @@
 #ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
 #define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
 
-#include <array>
+#include <algorithm>
 #include <list>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include <gravity/Vector.h>
 #include <gravity/barneshut/Orthant.h>
