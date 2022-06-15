@@ -7,13 +7,11 @@ namespace gravity::barneshut
         BoundingBox bounds,
         double const looseness,
         double const min_width,
-        unsigned const growth_limit,
         unsigned const max_shapes
     )
         : bounds_(std::move(bounds)),
         looseness_(looseness),
         min_width_(min_width),
-        growth_limit_(growth_limit),
         max_shapes_(max_shapes)
     {
 
@@ -105,31 +103,7 @@ namespace gravity::barneshut
         return std::ranges::any_of(children_, has_shapes);
     }
 
-    bool DynamicOctree::Grow(std::shared_ptr<IShape> const& shape) // NOLINT(misc-no-recursion)
-    {
-        // We can only grow a tree from its root node
-
-        if (!shape)
-        {
-            return false;
-        }
-
-        // Attempt to grow the tree
-
-        for (auto i = 0U; i < GrowthLimit(); ++i)
-        {
-            Grow(shape->Bounds().Centre());
-
-            if (LooselyContains(shape))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    void DynamicOctree::ShrinkToFit()
+    void DynamicOctree::Shrink()
     {
         // Enable ADL
         using std::swap;
@@ -153,8 +127,7 @@ namespace gravity::barneshut
         auto& child = children_[orthant];
 
         auto subtree = DynamicOctree(child.bounds_.ShrinkTo(orthant),
-                                     looseness_, min_width_, growth_limit_,
-                                     max_shapes_);
+                                     looseness_, min_width_, max_shapes_);
 
         // Swap subtree with this, then this with child. this will contain the
         // previous contents of child (new root node), child will contain the
@@ -164,6 +137,42 @@ namespace gravity::barneshut
 
         swap(subtree, *this);
         swap(*this, child);
+    }
+
+    void DynamicOctree::Grow(Vector const& point) // NOLINT(misc-no-recursion)
+    {
+        // Enable ADL
+        using std::swap;
+
+        // The BoundingBox must be expanded in the point of the
+        // nearest Orthant. Hence, current BoundingBox must become the
+        // inverse of the new root node.
+
+        auto orthant = bounds_.Orthant(point).Invert();
+
+        if (IsLeaf())
+        {
+            bounds_ = bounds_.ExpandFrom(orthant);
+            return;
+        }
+
+        // Construct leaf node and branch to construct children
+
+        auto root = DynamicOctree(bounds_.ExpandFrom(orthant), looseness_,
+                                  min_width_, max_shapes_);
+
+        root.Branch();
+
+        // Swap child with this, then this with root. this will contain the
+        // previous contents of root (new root node), child will contain the
+        // previous contents of this (to be discarded), and root will contain
+        // the previous contents of child (empty leaf node). root will be
+        // destructed at the end of this scope, containing the empty child.
+
+        auto& child = root.children_.at(orthant);
+
+        swap(child, *this);
+        swap(*this, root);
     }
 
     void swap(DynamicOctree& lhs, DynamicOctree& rhs)
@@ -179,7 +188,6 @@ namespace gravity::barneshut
 
         swap(lhs.looseness_, rhs.looseness_);
         swap(lhs.min_width_, rhs.min_width_);
-        swap(lhs.growth_limit_, rhs.growth_limit_);
         swap(lhs.max_shapes_, rhs.max_shapes_);
         swap(lhs.bounds_, rhs.bounds_);
         swap(lhs.shapes_, rhs.shapes_);
@@ -233,8 +241,8 @@ namespace gravity::barneshut
 
         for (auto orthant = 0U; orthant < children_.capacity(); ++orthant)
         {
-            children_.emplace_back(bounds_.ShrinkTo(orthant), looseness_,
-                                   min_width_, growth_limit_, max_shapes_);
+            children_.emplace_back(bounds_.ShrinkTo(orthant),
+                                   looseness_, min_width_, max_shapes_);
         }
 
         // Move shapes into child nodes, where possible
@@ -315,42 +323,6 @@ namespace gravity::barneshut
         {
             Merge();
         }
-    }
-
-    void DynamicOctree::Grow(Vector const& direction) // NOLINT(misc-no-recursion)
-    {
-        // Enable ADL
-        using std::swap;
-
-        // The BoundingBox must be expanded in the direction of the
-        // nearest Orthant. Hence, current BoundingBox must become the
-        // inverse of the new root node.
-
-        auto orthant = bounds_.Orthant(direction).Invert();
-
-        if (IsLeaf())
-        {
-            bounds_ = bounds_.ExpandFrom(orthant);
-            return;
-        }
-
-        // Construct leaf node and branch to construct children
-
-        auto root = DynamicOctree(bounds_.ExpandFrom(orthant), looseness_,
-                                  min_width_, growth_limit_, max_shapes_);
-
-        root.Branch();
-
-        // Swap child with this, then this with root. this will contain the
-        // previous contents of root (new root node), child will contain the
-        // previous contents of this (to be discarded), and root will contain
-        // the previous contents of child (empty leaf node). root will be
-        // destructed at the end of this scope, containing the empty child.
-
-        auto& child = root.children_.at(orthant);
-
-        swap(child, *this);
-        swap(*this, root);
     }
 
     bool DynamicOctree::OneChildHasShapes(Orthant &child) const

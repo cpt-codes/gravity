@@ -25,14 +25,12 @@ namespace gravity::barneshut
     public:
         static constexpr auto DefaultLooseness = 1.25;
         static constexpr auto DefaultMinWidth = 1.0;
-        static constexpr auto DefaultGrowthLimit = 10U;
         static constexpr auto DefaultMaxShapes = 8U;
 
         explicit DynamicOctree(
             BoundingBox bounds,
             double looseness = DefaultLooseness,
             double min_width = DefaultMinWidth,
-            unsigned growth_limit = DefaultGrowthLimit,
             unsigned max_shapes = DefaultMaxShapes);
 
         /// @brief
@@ -92,22 +90,17 @@ namespace gravity::barneshut
         /// Shared between all nodes of a tree.
         [[nodiscard]] double MinWidth() const { return min_width_; }
 
-        /// A limit on the number of times a tree can grow to fit a shape
-        /// within its bounds.
-        [[nodiscard]] unsigned GrowthLimit() const { return growth_limit_; }
-
         /// The maximum number of children in a node determines how many shapes
         /// a leaf node can hold before it needs to branch. Shared between all
         /// nodes of a tree.
         [[nodiscard]] unsigned MaxShapes() const { return max_shapes_; }
 
-        /// Grow the tree to contain the given shape, up to the growth limit.
-        /// Returns @c true if this node was grown to fit the given shape,
-        /// @c false otherwise.
-        bool Grow(std::shared_ptr<IShape> const& shape);
-
         /// Shrinks this node to one of its children, if possible.
-        void ShrinkToFit();
+        void Shrink();
+
+        /// Grow the tree in the direction of the given point. A new root node
+        /// is created and swapped with @c this.
+        void Grow(Vector const& point);
 
         /// Enable efficient swapping of DynamicOctree with ADL use
         friend void swap(DynamicOctree& lhs, DynamicOctree& rhs);
@@ -144,17 +137,12 @@ namespace gravity::barneshut
         ///     Nodes removed are back-inserted into the list.
         void Update(std::list<std::shared_ptr<IShape>>& removed);
 
-        /// Grow the tree in the given direction. A new root node is created
-        /// and swapped with @this.
-        void Grow(Vector const& direction);
-
         /// Returns @c true if only one of this node's children has shapes,
         /// @c false otherwise.
         bool OneChildHasShapes(Orthant& child) const;
 
         double looseness_{}; ///< @c DynamicOctree::Looseness
         double min_width_{}; ///< @ DynamicOctree::MinWidth
-        unsigned growth_limit_{}; ///< @c DynamicOctree::GrowthLimit
         unsigned max_shapes_{}; ///< @c DynamicOctree::MaxShapes
         BoundingBox bounds_; ///< @c DynamicOctree::Bounds
         std::list<std::shared_ptr<IShape>> shapes_; ///< Shapes loosely contained by this node
