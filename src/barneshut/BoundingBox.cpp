@@ -12,14 +12,35 @@ namespace gravity::barneshut
         }
     }
 
-    Vector const& BoundingBox::Extents() const
+    bool BoundingBox::Intersects(BoundingBox const& other, double const looseness) const
     {
-        return extents_;
-    }
+        // Two bounding boxes, X and Y, intersect if the minima of X are less
+        // than or equal to the maxima of Y, and the maxima of X are greater
+        // than or equal to the minima of Y. Hence, if the minima of X are
+        // greater than the maxima of Y, or the maxima of X are less than the
+        // minima of Y, the bounding boxes do not intersect.
 
-    Vector const& BoundingBox::Centre() const
-    {
-        return centre_;
+        for (auto i = 0U; i < Dimensions; ++i)
+        {
+            auto half_width = extents_[i];
+
+            if (looseness > 1.0)
+            {
+                half_width *= looseness;
+            }
+
+            auto other_min = other.centre_[i] - other.extents_[i];
+            auto other_max = other.centre_[i] + other.extents_[i];
+            auto this_min = centre_[i] - half_width;
+            auto this_max = centre_[i] + half_width;
+
+            if (this_min > other_max || this_max < other_min)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool BoundingBox::Contains(Vector const& point, double const looseness) const
@@ -28,7 +49,7 @@ namespace gravity::barneshut
         {
             auto half_width = extents_[i];
 
-            if (looseness > 0.0)
+            if (looseness > 1.0)
             {
                 half_width *= looseness;
             }
@@ -49,7 +70,7 @@ namespace gravity::barneshut
         {
             auto half_width = extents_[i];
 
-            if (looseness > 0.0)
+            if (looseness > 1.0)
             {
                 half_width *= looseness;
             }

@@ -19,7 +19,7 @@ namespace gravity::barneshut
 
     bool Octree::Insert(std::shared_ptr<IShape> const& shape, Bounded const bounded) // NOLINT(misc-no-recursion)
     {
-        if (!shape || !Contains(shape, bounded))
+        if (!shape || !Contains(shape->Bounds(), bounded))
         {
             return false;
         }
@@ -86,21 +86,6 @@ namespace gravity::barneshut
         Update(removed);
 
         return removed;
-    }
-
-    bool Octree::HasShapes() const // NOLINT(misc-no-recursion)
-    {
-        if (!shapes_.empty())
-        {
-            return true;
-        }
-
-        auto const has_shapes = [](Octree const& child) -> bool
-        {
-            return child.HasShapes();
-        };
-
-        return std::ranges::any_of(children_, has_shapes);
     }
 
     void Octree::Shrink()
@@ -175,19 +160,49 @@ namespace gravity::barneshut
         swap(*this, root);
     }
 
-    bool Octree::Contains(std::shared_ptr<IShape> const& shape, Bounded const bounded) const
+    bool Octree::Contains(BoundingBox const& bounds, Bounded const bounded) const
     {
-        if (!shape)
+        if (bounded == Bounded::Loosely)
+        {
+            return bounds_.Contains(bounds, Looseness());
+        }
+
+        return bounds_.Contains(bounds);
+    }
+
+    bool Octree::IsColliding(BoundingBox const& bounds) const // NOLINT(misc-no-recursion)
+    {
+        if (!bounds_.Intersects(bounds, Looseness())) // Do the bounds loosely intersect?
         {
             return false;
         }
 
-        if (bounded == Bounded::Loosely)
+        for (auto const& shape : shapes_)
         {
-            return bounds_.Contains(shape->Bounds(), Looseness());
+            if (shape && shape->Bounds().Intersects(bounds))
+            {
+                return true;
+            }
         }
 
-        return bounds_.Contains(shape->Bounds());
+        for (auto const& child : children_)
+        {
+            if(child.IsColliding(bounds))
+            {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    std::list<std::shared_ptr<IShape>> Octree::Colliding(BoundingBox const& bounds) const
+    {
+        std::list<std::shared_ptr<IShape>> colliding;
+
+        GetColliding(bounds, colliding);
+
+        return colliding;
     }
 
     void swap(Octree& lhs, Octree& rhs)
@@ -293,36 +308,44 @@ namespace gravity::barneshut
             child.Update(removed);
         }
 
+        // Iterator to shape removed from another node
+        auto previously_removed = removed.begin();
+
         // Once a leaf node is reached, remove unbounded shapes and insert
         // at the end of the removed list
-
-        auto removed_from_this = removed.end();
-        auto it = shapes_.begin();
-
-        while (it != shapes_.end())
         {
-            if (Contains(*it, Bounded::Loosely))
-            {
-                ++it;
-                continue;
-            }
+            auto it = shapes_.begin();
 
-            removed.splice(removed.end(), shapes_, it++);
+            while (it != shapes_.end())
+            {
+                auto const &shape = *it;
+
+                if (shape && Contains(shape->Bounds(), Bounded::Loosely))
+                {
+                    ++it;
+                    continue;
+                }
+
+                removed.splice(removed.begin(), shapes_, it++);
+            }
         }
 
         // Now, try to insert the shapes that were previously removed
-
-        it = removed.begin();
-
-        while (it != removed_from_this)
         {
-            if(!Insert(*it, Bounded::Tightly))
-            {
-                ++it;
-                continue;
-            }
+            auto it = previously_removed;
 
-            removed.erase(it++);
+            while (it != removed.end())
+            {
+                auto const& shape = *it;
+
+                if (shape && !Insert(shape, Bounded::Tightly))
+                {
+                    ++it;
+                    continue;
+                }
+
+                removed.erase(it++);
+            }
         }
 
         // Check for possible merger
@@ -331,6 +354,21 @@ namespace gravity::barneshut
         {
             Merge();
         }
+    }
+
+    bool Octree::HasShapes() const // NOLINT(misc-no-recursion)
+    {
+        if (!shapes_.empty())
+        {
+            return true;
+        }
+
+        auto const has_shapes = [](Octree const& child) -> bool
+        {
+            return child.HasShapes();
+        };
+
+        return std::ranges::any_of(children_, has_shapes);
     }
 
     bool Octree::OneChildHasShapes(Orthant &child) const
@@ -359,5 +397,27 @@ namespace gravity::barneshut
         }
 
         return true;
+    }
+
+    void Octree::GetColliding(BoundingBox const& bounds, // NOLINT(misc-no-recursion)
+        std::list<std::shared_ptr<IShape>>& colliding) const
+    {
+        if (!bounds_.Intersects(bounds))
+        {
+            return;
+        }
+
+        for (auto const& shape : shapes_)
+        {
+            if (shape && shape->Bounds().Intersects(bounds))
+            {
+                colliding.push_back(shape);
+            }
+        }
+
+        for (auto const& child : children_)
+        {
+            child.GetColliding(bounds, colliding);
+        }
     }
 }

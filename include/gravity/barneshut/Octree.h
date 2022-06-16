@@ -75,9 +75,6 @@ namespace gravity::barneshut
         ///     All shapes that no longer fit within the tree.
         std::list<std::shared_ptr<IShape>> Update();
 
-        /// Returns @c true if this node contains shapes, @c false otherwise.
-        [[nodiscard]] bool HasShapes() const;
-
         /// Shrinks this node to one of its children, if possible.
         void Shrink();
 
@@ -88,17 +85,19 @@ namespace gravity::barneshut
         /// Returns @c true if the tree contains the @p shape, @c false
         /// otherwise. @p loosely determines whether @p shape is contained
         /// loosely or tightly.
-        [[nodiscard]] bool Contains(std::shared_ptr<IShape> const& shape, Bounded bounded) const;
+        [[nodiscard]] bool Contains(BoundingBox const& bounds, Bounded bounded) const;
 
-        /// Bounds within which all children are contained
+        /// Return @c true if any shape within @c this tree is colliding with
+        /// @p bounds, @c false otherwise.
+        [[nodiscard]] bool IsColliding(BoundingBox const& bounds) const;
+
+        /// Return a list of shapes within @c this tree colliding with
+        /// @p bounds.
+        [[maybe_unused, nodiscard]]
+        std::list<std::shared_ptr<IShape>> Colliding(BoundingBox const& bounds) const;
+
+        /// Bounds within which all children of the tree are contained
         [[nodiscard]] BoundingBox const& Bounds() const { return bounds_; }
-
-        /// Returns @c true if this node is a leaf node (i.e. no children),
-        /// @c false otherwise.
-        [[nodiscard]] bool IsLeaf() const { return children_.empty(); }
-
-        /// Children of this node in the octree. Empty if this node is a leaf.
-        [[nodiscard]] std::vector<Octree> const& Children() const { return children_; }
 
         /// The looseness is a multiplier applied to the bounds of a node when
         /// determining whether a shape is contained by said node. Hence, the
@@ -120,6 +119,10 @@ namespace gravity::barneshut
         friend void swap(Octree& lhs, Octree& rhs);
 
     private:
+        /// Returns @c true if this node is a leaf node (i.e. no children),
+        /// @c false otherwise.
+        [[nodiscard]] bool IsLeaf() const { return children_.empty(); }
+
         /// Returns @c true if the node's bounds are less than or equal to the
         /// minimum allowed width. @c false otherwise.
         [[nodiscard]] bool IsMinWidth() const;
@@ -147,9 +150,15 @@ namespace gravity::barneshut
         ///     Nodes removed are back-inserted into the list.
         void Update(std::list<std::shared_ptr<IShape>>& removed);
 
+        /// Returns @c true if this node contains shapes, @c false otherwise.
+        [[nodiscard]] bool HasShapes() const;
+
         /// Returns @c true if only one of this node's children has shapes,
         /// @c false otherwise.
         bool OneChildHasShapes(Orthant& child) const;
+
+        /// Insert shapes in @c this tree colliding with @p bounds into @p colliding.
+        void GetColliding(BoundingBox const& bounds, std::list<std::shared_ptr<IShape>>& colliding) const;
 
         double looseness_{}; ///< @c Octree::Looseness
         double min_width_{}; ///< @ Octree::MinWidth
