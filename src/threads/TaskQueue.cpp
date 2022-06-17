@@ -29,11 +29,13 @@ namespace gravity::threads
 
     void TaskQueue::Clear()
     {
-        std::lock_guard const lock(mutex_);
-
-        while(!queue_.empty())
         {
-            queue_.pop();
+            std::lock_guard const lock(mutex_);
+
+            while (!queue_.empty())
+            {
+                queue_.pop();
+            }
         }
 
         changed_.notify_all(); // notify all waiting threads the queue is now empty
