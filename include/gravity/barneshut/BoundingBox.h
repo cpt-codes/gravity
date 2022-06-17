@@ -20,37 +20,45 @@ namespace gravity::barneshut
         BoundingBox(Vector const& centre, Vector const& width);
 
         /// Extents (half-width) of the @c BoundingBox
-        [[nodiscard]] Vector const& Extents() const { return extents_; }
+        [[nodiscard]]
+        Vector const& Extents() const { return extents_; }
 
         /// Centre of the @c BoundingBox
-        [[nodiscard]] Vector const& Centre() const { return centre_; }
+        [[nodiscard]]
+        Vector const& Centre() const { return centre_; }
 
         /// Returns @c true if @c this intersect with @p other, @c false otherwise.
-        [[nodiscard]] bool Intersects(BoundingBox const& other, double looseness = 1.0) const;
+        [[nodiscard]]
+        bool Intersects(BoundingBox const& other, double looseness = 1.0) const;
 
         /// If the @p point is bounded by (inclusive) @c this @c BoundingBox,
         /// returns @c true, otherwise @c false.
-        [[nodiscard]] bool Contains(Vector const& point, double looseness = 1.0) const;
+        [[nodiscard]]
+        bool Contains(Vector const& point, double looseness = 1.0) const;
 
         /// If the @p other @c BoundingBox is encapsulated (inclusive) by
         /// @c this @c BoundingBox, returns @c true, otherwise @c false.
-        [[nodiscard]] bool Contains(BoundingBox const& box, double looseness = 1.0) const;
+        [[nodiscard]]
+        bool Contains(BoundingBox const& box, double looseness = 1.0) const;
 
         /// Computes the @c Orthant of this @c BoundingBox that bounds the
         /// @p point.
-        [[nodiscard]] class Orthant Orthant(Vector const& point) const;
+        [[nodiscard]]
+        class Orthant Orthant(Vector const& point) const;
 
         /// Computes the @c BoundingBox encapsulated by this @c BoundingBox in
         /// the given @c Orthant.
-        [[nodiscard]] BoundingBox ShrinkTo(class Orthant orthant) const;
+        [[nodiscard]]
+        BoundingBox ShrinkTo(class Orthant orthant) const;
 
         /// Computes the @c BoundingBox that contains @c this @c BoundingBox
         /// as an @c Orthant.
-        [[nodiscard]] BoundingBox ExpandFrom(class Orthant orthant) const;
+        [[nodiscard]]
+        BoundingBox ExpandFrom(class Orthant orthant) const;
 
     private:
-        Vector extents_; /// Extents of the BoundingBox
-        Vector centre_; /// Centre of the BoundingBox
+        Vector extents_; ///< Extents of the BoundingBox
+        Vector centre_; ///< Centre of the BoundingBox
     };
 }
 

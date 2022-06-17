@@ -52,7 +52,8 @@ namespace gravity::barneshut
 
         /// Returns the alignment of the i-th axis. @c true if aligned/positive,
         /// @c false if anti-aligned/negative.
-        [[nodiscard]] bool IsAxisAligned(const std::size_t digit) const
+        [[nodiscard]]
+        bool IsAxisAligned(const std::size_t digit) const
         {
             return !orthant_.test(digit);
         }
