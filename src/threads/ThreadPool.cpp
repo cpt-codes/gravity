@@ -4,14 +4,14 @@ namespace gravity::threads
 {
     ThreadPool::ThreadPool(unsigned int const threads)
     {
-        if (threads == 0u)
+        if (threads == 0U)
         {
             throw std::invalid_argument("ThreadPool: cannot instantiate zero threads.");
         }
 
         try
         {
-            for (auto i = 0u; i < threads; ++i)
+            for (auto i = 0U; i < threads; ++i)
             {
                 threads_.emplace_back(&ThreadPool::Worker, this);
             }
@@ -28,7 +28,7 @@ namespace gravity::threads
         // hardware concurrency can be zero if it is not computable. Therefore,
         // we must check and protect against overflow of the unsigned int.
 
-        return std::max(std::thread::hardware_concurrency(), 2u) - 1u;
+        return std::max(std::thread::hardware_concurrency(), 2U) - 1U;
     }
 
     void ThreadPool::Submit(std::shared_ptr<ITask> const& task)
@@ -49,10 +49,8 @@ namespace gravity::threads
         {
             if (queue_.Pop(task, true))
             {
-                active_++;
                 task->Execute();
                 task = nullptr;
-                active_--;
             }
         }
     }

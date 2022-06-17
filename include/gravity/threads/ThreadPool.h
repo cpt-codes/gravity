@@ -17,38 +17,43 @@
 
 namespace gravity::threads
 {
-    // ThreadPool Keeps a set of threads waiting to execute incoming Tasks.
+    /// ThreadPool Keeps a set of threads waiting to execute incoming Tasks.
     class ThreadPool
     {
     public:
-        // Construct a ThreadPool with @param threads given
+        /// Construct a ThreadPool with @p threads given
         explicit ThreadPool(unsigned int threads = HardwareConcurrency());
 
-        // Number of physical and logical CPUs available. Guaranteed to be >= 1.
+        /// Number of physical and logical CPUs available. Guaranteed to be >= 1.
         static unsigned int HardwareConcurrency();
 
-        // Total number of threads in the pool
-        unsigned int ThreadCount() { return threads_.size(); }
+        /// Total number of threads in the pool
+        [[nodiscard]]
+        unsigned int ThreadCount() const { return threads_.size(); }
 
-        // Number of threads working on tasks
-        unsigned int ActiveThreads() { return active_; }
+        /// Number of tasks waiting to be executed
+        [[nodiscard]]
+        unsigned int TasksQueued() const { return queue_.Size(); }
 
-        // Number of tasks waiting to be executed
-        unsigned int TasksQueued() { return queue_.Size(); }
-
-        // Submit an ITask to be run in the thread pool
+        /// Submit an ITask to be run in the thread pool
         void Submit(std::shared_ptr<ITask> const& task);
 
-        // Submit a task to be run in the thread pool and return a future
+        /// Submit a task to be run in the thread pool and return a future
         template <typename Func, typename... Args> requires std::invocable<Func, Args...>
         auto Submit(Func&& func, Args&&... args);
 
-        // Parallel for-each. Applies the given invocable object func to the result of each de-
-        // referenced iterator in the range [being, end] in task_count threads. Returns a vector
-        // of shared futures or blocks until all tasks are complete.
+        /// @brief
+        ///     Parallel for-each.
+        /// @details
+        ///     Applies the given invocable @p func to the result of each
+        ///     iterator value type in the range @p begin to @p end in
+        ///     @p task_count tasks.
+        /// @return
+        ///     Returns immediately if @c Block is @c false, otherwise returns
+        ///     once all tasks are complete.
         template<std::random_access_iterator Iter, std::copy_constructible Func, bool Block = true>
             requires std::invocable<Func, std::iter_value_t<Iter>>
-        auto ForEach(Iter begin, Iter end, Func func, unsigned int task_count = 0);
+        void ForEach(Iter begin, Iter end, Func func, unsigned int task_count = 0);
 
         ~ThreadPool();
 
@@ -59,17 +64,20 @@ namespace gravity::threads
         ThreadPool& operator=(ThreadPool&&) noexcept = delete;
 
     private:
-        std::vector<std::thread> threads_;
-        std::atomic_uint active_; // number of threads executing tasks
-        TaskQueue queue_; // tasks submitted to the thread pool
+        std::vector<std::thread> threads_; ///< Threads in the pool
+        TaskQueue queue_; ///< Tasks submitted to the thread pool
 
         using futures_t = std::vector<std::shared_future<void>>;
 
-        // Runs in each thread. Acquires a task from the queue and executes it.
+        /// Simple loop that acquires a task from the queue and executes it.
+        /// If there are no tasks, it waits on the queue.
         void Worker();
 
+        /// Closes the queue, then joins all threads in the pool.
         void JoinThreads();
 
+        /// Catches any exceptions thrown by the futures, wraps them into an
+        /// ErrorList, then throws the message created in a single exception.
         static void CheckForErrors(futures_t const& futures);
     };
 
@@ -88,11 +96,11 @@ namespace gravity::threads
 
     template<std::random_access_iterator Iter, std::copy_constructible Func, bool Block>
         requires std::invocable<Func, std::iter_value_t<Iter>>
-    auto ThreadPool::ForEach(Iter begin, Iter end, Func func, unsigned int task_count)
+    void ThreadPool::ForEach(Iter begin, Iter end, Func func, unsigned int task_count)
     {
         if (begin == end)
         {
-            return futures_t();
+            return;
         }
 
         if (task_count == 0)
@@ -108,7 +116,7 @@ namespace gravity::threads
 
         end = begin; // now use end to temporarily store the end of each block
 
-        for (unsigned int i = 0; i < task_count; i++)
+        for (auto& future : futures)
         {
             if (tasks_remaining > 0)
             {
@@ -128,17 +136,14 @@ namespace gravity::threads
                 }
             };
 
-            futures[i] = Submit(std::move(task));
+            future = Submit(std::move(task));
+
             begin = end; // now use begin to store the beginning of the next block
         }
 
-        if constexpr(Block)
+        if constexpr(Block) // Check the futures if we're blocking
         {
             CheckForErrors(futures);
-        }
-        else
-        {
-            return futures;
         }
     }
 }
