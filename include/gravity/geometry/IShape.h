@@ -1,9 +1,9 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ISHAPE_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ISHAPE_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_GEOMETRY_ISHAPE_H_
+#define GRAVITY_INCLUDE_GRAVITY_GEOMETRY_ISHAPE_H_
 
-#include "gravity/barneshut/BoundingBox.h"
+#include "gravity/geometry/BoundingBox.h"
 
-namespace gravity::barneshut
+namespace gravity::geometry
 {
     /// @c IShape is a base class for N dimensional objects whose shape is
     /// encapsulated by a @c BoundingBox.
@@ -30,4 +30,4 @@ namespace gravity::barneshut
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ISHAPE_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_GEOMETRY_ISHAPE_H_

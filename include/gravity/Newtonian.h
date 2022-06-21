@@ -8,11 +8,11 @@ namespace gravity
     class Newtonian final : public IGravity
     {
     public:
-        [[nodiscard]] Vector Acceleration(IParticle const& p0, Particle const& p1) const override
+        [[nodiscard]] geometry::Vector Acceleration(Particle const& p0, Particle const& p1) const override
         {
             auto r = p0.Displacement() - p1.Displacement();
 
-            return -GravConst() * p0.Mass() * r / std::pow(ublas::norm_2(r), 3);
+            return -GravConst() * p0.Mass() * r / std::pow(geometry::ublas::norm_2(r), 3);
         }
     };
 }

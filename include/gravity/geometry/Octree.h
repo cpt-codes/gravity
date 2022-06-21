@@ -1,18 +1,20 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_GEOMETRY_OCTREE_H_
+#define GRAVITY_INCLUDE_GRAVITY_GEOMETRY_OCTREE_H_
 
 #include <algorithm>
 #include <list>
 #include <memory>
+#include <ranges>
 #include <utility>
 #include <vector>
 
-#include <gravity/Vector.h>
-#include <gravity/barneshut/Orthant.h>
-#include <gravity/barneshut/BoundingBox.h>
-#include <gravity/barneshut/IShape.h>
+#include "gravity/geometry/Vector.h"
+#include "gravity/geometry/Orthant.h"
+#include "gravity/geometry/BoundingBox.h"
+#include "gravity/geometry/IShape.h"
 
-namespace gravity::barneshut
+
+namespace gravity::geometry
 {
     /// The state describing how a shape is bounded by a node within a
     /// Octree
@@ -28,7 +30,8 @@ namespace gravity::barneshut
     /// @details
     ///     The dynamic octree has three configurable elements: the looseness
     ///     of the tree, minimum width of a node, and the maximum number of
-    ///     children in a node.
+    ///     children in a node. These elements determine the behaviour of the
+    ///     tree during state changes (insertion, removal, etc).
     class Octree
     {
     public:
@@ -100,6 +103,27 @@ namespace gravity::barneshut
         [[maybe_unused, nodiscard]]
         std::list<std::shared_ptr<IShape>> Colliding(BoundingBox const& bounds) const;
 
+        /// Returns @c true if this node is a leaf node (i.e. no children),
+        /// @c false otherwise.
+        [[nodiscard]]
+        bool IsLeaf() const { return children_.empty(); }
+
+        /// References to the direct child nodes of this tree.
+        /// The children may be leaf or branch nodes.
+        [[nodiscard]]
+        std::vector<std::reference_wrapper<Octree>>
+            Children() { return {children_.begin(), children_.end()}; }
+
+        /// Const references to the direct child nodes of this tree.
+        /// The children may be leaf or branch nodes.
+        [[nodiscard]]
+        std::vector<std::reference_wrapper<const Octree>>
+            Children() const { return {children_.cbegin(), children_.cend()}; }
+
+        /// Shapes contained in this node of the tree.
+        [[nodiscard]]
+        std::list<std::shared_ptr<IShape>> const& Shapes() const { return shapes_; }
+
         /// Bounds within which all children of the tree are contained
         [[nodiscard]]
         BoundingBox const& Bounds() const { return bounds_; }
@@ -127,11 +151,6 @@ namespace gravity::barneshut
         friend void swap(Octree& lhs, Octree& rhs);
 
     private:
-        /// Returns @c true if this node is a leaf node (i.e. no children),
-        /// @c false otherwise.
-        [[nodiscard]]
-        bool IsLeaf() const { return children_.empty(); }
-
         /// Returns @c true if the node's bounds are less than or equal to the
         /// minimum allowed width. @c false otherwise.
         [[nodiscard]]
@@ -182,6 +201,4 @@ namespace gravity::barneshut
     };
 }
 
-
-
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_OCTREE_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_GEOMETRY_OCTREE_H_

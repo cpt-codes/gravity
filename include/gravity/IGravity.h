@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "gravity/Vector.h"
+#include "gravity/geometry/Vector.h"
 #include "gravity/Particle.h"
 
 namespace gravity
@@ -12,10 +12,10 @@ namespace gravity
     {
     public:
         // Compute the gravitational field that particle p1 is subject to due to particle p0.
-        [[nodiscard]] virtual Vector Acceleration(IParticle const& p0, Particle const& p1) const = 0;
+        [[nodiscard]] virtual geometry::Vector Acceleration(Particle const& p0, Particle const& p1) const = 0;
 
         // Compute the gravitational force that particle p1 is subject to due to particle p0.
-        [[maybe_unused]] [[nodiscard]] Vector Force(IParticle const& p0, Particle const& p1) const
+        [[maybe_unused]] [[nodiscard]] geometry::Vector Force(Particle const& p0, Particle const& p1) const
         {
             return p1.Mass() * Acceleration(p0, p1);
         }

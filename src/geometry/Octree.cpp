@@ -1,6 +1,6 @@
-#include "gravity/barneshut/Octree.h"
+#include "gravity/geometry/Octree.h"
 
-namespace gravity::barneshut
+namespace gravity::geometry
 {
     Octree::Octree
     (

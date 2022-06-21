@@ -1,13 +1,13 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_GEOMETRY_ORTHANT_H_
+#define GRAVITY_INCLUDE_GRAVITY_GEOMETRY_ORTHANT_H_
 
 #include <bitset>
 #include <cstddef>
 #include <limits>
 
-#include "gravity/Vector.h"
+#include "gravity/geometry/Vector.h"
 
-namespace gravity::barneshut
+namespace gravity::geometry
 {
     /// @brief
     ///     @c Orthant represents an orthant of an N dimensional box, which
@@ -89,4 +89,4 @@ namespace gravity::barneshut
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_ORTHANT_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_GEOMETRY_ORTHANT_H_

@@ -1,5 +1,5 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_VECTOR_H_
-#define GRAVITY_INCLUDE_GRAVITY_VECTOR_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_GEOMETRY_VECTOR_H_
+#define GRAVITY_INCLUDE_GRAVITY_GEOMETRY_VECTOR_H_
 
 #include <algorithm>
 #include <cstddef>
@@ -7,7 +7,7 @@
 
 #include <boost/numeric/ublas/vector.hpp>
 
-namespace gravity
+namespace gravity::geometry
 {
     // Dimensions of spatial vectors in the simulation
     constexpr std::size_t Dimensions{ 3 };
@@ -49,4 +49,4 @@ namespace gravity
     }
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_VECTOR_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_GEOMETRY_VECTOR_H_

@@ -1,15 +1,30 @@
-#include "gravity/barneshut/BoundingBox.h"
+#include "gravity/geometry/BoundingBox.h"
 
-namespace gravity::barneshut
+namespace gravity::geometry
 {
+    namespace
+    {
+        void ValidateExtents(Vector const& extents)
+        {
+            if(any_less_than_or_equal_to(extents, 0.0))
+            {
+                throw std::invalid_argument("Extents must be > 0.0");
+            }
+        }
+    }
+
+
     BoundingBox::BoundingBox(Vector const& centre, Vector const& width)
         : extents_(width * 0.5),
         centre_(centre)
     {
-        if(any_less_than_or_equal_to(extents_, 0.0))
-        {
-            throw std::invalid_argument("Extents must be > 0.0");
-        }
+        ValidateExtents(extents_);
+    }
+
+    void BoundingBox::Extents(Vector const& extents)
+    {
+        ValidateExtents(extents);
+        extents_ = extents;
     }
 
     bool BoundingBox::Intersects(BoundingBox const& other, double const looseness) const

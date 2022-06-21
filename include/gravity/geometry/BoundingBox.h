@@ -1,13 +1,13 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_BARNESHUT_BOUNDINGBOX_H_
-#define GRAVITY_INCLUDE_GRAVITY_BARNESHUT_BOUNDINGBOX_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_GEOMETRY_BOUNDINGBOX_H_
+#define GRAVITY_INCLUDE_GRAVITY_GEOMETRY_BOUNDINGBOX_H_
 
 #include <algorithm>
 #include <stdexcept>
 
-#include "gravity/Vector.h"
-#include "gravity/barneshut/Orthant.h"
+#include "gravity/geometry/Vector.h"
+#include "gravity/geometry/Orthant.h"
 
-namespace gravity::barneshut
+namespace gravity::geometry
 {
     /// Immutable class representing an N dimensional axis-aligned
     /// bounding box (AABB).
@@ -23,9 +23,14 @@ namespace gravity::barneshut
         [[nodiscard]]
         Vector const& Extents() const { return extents_; }
 
+        void Extents(Vector const& extents);
+
         /// Centre of the @c BoundingBox
         [[nodiscard]]
         Vector const& Centre() const { return centre_; }
+
+        [[nodiscard]]
+        Vector& Centre() { return centre_; }
 
         /// Returns @c true if @c this intersect with @p other, @c false otherwise.
         [[nodiscard]]
@@ -57,9 +62,9 @@ namespace gravity::barneshut
         BoundingBox ExpandFrom(class Orthant orthant) const;
 
     private:
-        Vector extents_; ///< Extents of the BoundingBox
+        Vector extents_{ Dimensions, 1.0 }; ///< Extents of the BoundingBox
         Vector centre_; ///< Centre of the BoundingBox
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_BARNESHUT_BOUNDINGBOX_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_GEOMETRY_BOUNDINGBOX_H_
