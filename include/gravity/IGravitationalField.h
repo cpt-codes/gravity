@@ -1,12 +1,12 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_IGRAVITY_H_
-#define GRAVITY_INCLUDE_GRAVITY_IGRAVITY_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_IGRAVITATIONALFIELD_H_
+#define GRAVITY_INCLUDE_GRAVITY_IGRAVITATIONALFIELD_H_
 
 #include "gravity/geometry/Vector.h"
 #include "gravity/Particle.h"
 
 namespace gravity
 {
-    class IGravity
+    class IGravitationalField
     {
     public:
         /// Compute the gravitational acceleration that @p subject is subject
@@ -29,24 +29,24 @@ namespace gravity
         [[nodiscard]] double GravConst() const { return grav_; }
         [[nodiscard]] double& GravConst() { return grav_; }
 
-        IGravity() = default;
+        IGravitationalField() = default;
 
-        virtual ~IGravity() = default;
+        virtual ~IGravitationalField() = default;
 
     protected:
         // The destructor of this class must be virtual hence the rule of five applies.
         // CppCoreGuidelines C.67 suggests protecting these special members to prevent
         // object slicing while allowing subclasses to implement their own.
 
-        IGravity(IGravity const&) = default;
-        IGravity& operator=(IGravity const&) = default;
+        IGravitationalField(IGravitationalField const&) = default;
+        IGravitationalField& operator=(IGravitationalField const&) = default;
 
-        IGravity(IGravity&&) noexcept = default;
-        IGravity& operator=(IGravity&&) noexcept = default;
+        IGravitationalField(IGravitationalField&&) noexcept = default;
+        IGravitationalField& operator=(IGravitationalField&&) noexcept = default;
 
     private:
         double grav_{ 6.67430e10-11 }; // Gravitational constant
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_IGRAVITY_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_IGRAVITATIONALFIELD_H_

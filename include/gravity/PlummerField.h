@@ -1,14 +1,14 @@
- #ifndef GRAVITY_INCLUDE_GRAVITY_PLUMMER_H_
-#define GRAVITY_INCLUDE_GRAVITY_PLUMMER_H_
+ #ifndef GRAVITY_INCLUDE_GRAVITY_PLUMMERFIELD_H_
+#define GRAVITY_INCLUDE_GRAVITY_PLUMMERFIELD_H_
 
 #include <cmath>
 
-#include "gravity/IGravity.h"
+#include "gravity/IGravitationalField.h"
 #include "gravity/Particle.h"
 
 namespace gravity
 {
-    class Plummer final : public IGravity
+    class PlummerField final : public IGravitationalField
     {
     public:
         [[nodiscard]] geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
@@ -25,4 +25,4 @@ namespace gravity
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_PLUMMER_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_PLUMMERFIELD_H_

@@ -1,14 +1,14 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_NEWTONIAN_H_
-#define GRAVITY_INCLUDE_GRAVITY_NEWTONIAN_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_NEWTONIANFIELD_H_
+#define GRAVITY_INCLUDE_GRAVITY_NEWTONIANFIELD_H_
 
 #include <cmath>
 
-#include "gravity/IGravity.h"
+#include "gravity/IGravitationalField.h"
 #include "gravity/Particle.h"
 
 namespace gravity
 {
-    class Newtonian final : public IGravity
+    class NewtonianField final : public IGravitationalField
     {
     public:
         [[nodiscard]] geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
@@ -22,4 +22,4 @@ namespace gravity
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_NEWTONIAN_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_NEWTONIANFIELD_H_
