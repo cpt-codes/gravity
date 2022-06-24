@@ -1,8 +1,6 @@
 #ifndef GRAVITY_INCLUDE_GRAVITY_IGRAVITY_H_
 #define GRAVITY_INCLUDE_GRAVITY_IGRAVITY_H_
 
-#include <cmath>
-
 #include "gravity/geometry/Vector.h"
 #include "gravity/Particle.h"
 
@@ -11,13 +9,21 @@ namespace gravity
     class IGravity
     {
     public:
-        // Compute the gravitational field that particle p1 is subject to due to particle p0.
-        [[nodiscard]] virtual geometry::Vector Acceleration(Particle const& p0, Particle const& p1) const = 0;
+        /// Compute the gravitational acceleration that @p subject is subject
+        /// to due to @p source.
+        [[nodiscard]] virtual geometry::Vector Acceleration(Particle const& source, Particle const& subject) const = 0;
 
-        // Compute the gravitational force that particle p1 is subject to due to particle p0.
-        [[maybe_unused]] [[nodiscard]] geometry::Vector Force(Particle const& p0, Particle const& p1) const
+        /// Compute the gravitational force that @p subject is subject to due
+        /// to @p source.
+        [[maybe_unused]] [[nodiscard]] geometry::Vector Force(Particle const& source, Particle const& subject) const
         {
-            return p1.Mass() * Acceleration(p0, p1);
+            return subject.Mass() * Acceleration(source, subject);
+        }
+
+        /// Compute the gravitational field that @p subject is subject to due to @p source.
+        geometry::Vector operator()(Particle const& source, Particle const& subject) const
+        {
+            return Acceleration(source, subject);
         }
 
         [[nodiscard]] double GravConst() const { return grav_; }
