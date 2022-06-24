@@ -109,9 +109,9 @@ namespace gravity::geometry
             return;
         }
 
-        auto& child = children_[orthant];
+        auto* child = &children_[orthant];
 
-        auto subtree = Octree(child.bounds_.ShrinkTo(orthant),
+        auto subtree = Octree(child->bounds_.ShrinkTo(orthant),
                               looseness_, min_width_, max_shapes_);
 
         // Swap subtree with this, then this with child. this will contain the
@@ -121,7 +121,7 @@ namespace gravity::geometry
         // be destructed at the end of this scope, containing the empty child.
 
         swap(subtree, *this);
-        swap(*this, child);
+        swap(*this, *child);
     }
 
     void Octree::Grow(Vector const& point) // NOLINT(misc-no-recursion)
@@ -203,6 +203,16 @@ namespace gravity::geometry
         GetColliding(bounds, colliding);
 
         return colliding;
+    }
+
+    bool Octree::Empty() const // NOLINT(misc-no-recursion)
+    {
+        auto const empty = [](Octree const& child) -> bool
+        {
+            return child.Empty();
+        };
+
+        return std::ranges::all_of(children_, empty) && shapes_.empty();
     }
 
     void swap(Octree& lhs, Octree& rhs)
@@ -356,47 +366,27 @@ namespace gravity::geometry
         }
     }
 
-    bool Octree::HasShapes() const // NOLINT(misc-no-recursion)
+    bool Octree::OneChildHasShapes(Orthant& child) const
     {
-        if (!shapes_.empty())
-        {
-            return true;
-        }
-
-        auto const has_shapes = [](Octree const& child) -> bool
-        {
-            return child.HasShapes();
-        };
-
-        return std::ranges::any_of(children_, has_shapes);
-    }
-
-    bool Octree::OneChildHasShapes(Orthant &child) const
-    {
-        bool last_had_shapes{};
+        bool has_shapes{};
 
         for (auto i = 0U; i < children_.size(); ++i)
         {
-            if (!children_[i].HasShapes())
+            if (children_[i].Empty())
             {
                 continue;
             }
 
-            if (last_had_shapes)
+            if (has_shapes)
             {
                 return false;
             }
 
-            last_had_shapes = true;
+            has_shapes = true;
             child = i;
         }
 
-        if (!last_had_shapes)
-        {
-            return false;
-        }
-
-        return true;
+        return has_shapes;
     }
 
     void Octree::GetColliding(BoundingBox const& bounds, // NOLINT(misc-no-recursion)

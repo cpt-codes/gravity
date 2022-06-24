@@ -73,18 +73,18 @@ namespace gravity::geometry
         ///     Shapes are removed bottom-up and re-inserted at higher level
         ///     nodes, thus letting them cascade back down into the correct
         ///     node. Each node will automatically branch and/or merge given
-        ///     the same conditions in @c Insert and @c Remove are met.
+        ///     the same conditions in @c Build and @c Remove are met. This
+        ///     will be more efficient than removing and re-inserting where
+        ///     there are incremental changes in bounds, however will
         /// @return
         ///     All shapes that no longer fit within the tree.
         std::list<std::shared_ptr<IShape>> Update();
 
         /// Shrinks this node to one of its children, if possible.
-        [[maybe_unused]]
         void Shrink();
 
         /// Grow the tree in the direction of the given point. A new root node
         /// is created and swapped with @c this.
-        [[maybe_unused]]
         void Grow(Vector const& point);
 
         /// Returns @c true if the tree contains the @p shape, @c false
@@ -103,22 +103,13 @@ namespace gravity::geometry
         [[maybe_unused, nodiscard]]
         std::list<std::shared_ptr<IShape>> Colliding(BoundingBox const& bounds) const;
 
-        /// Returns @c true if this node is a leaf node (i.e. no children),
-        /// @c false otherwise.
+        /// Returns @c true if the Octree contains any shapes, otherwise @c false
         [[nodiscard]]
-        bool IsLeaf() const { return children_.empty(); }
+        bool Empty() const;
 
-        /// References to the direct child nodes of this tree.
-        /// The children may be leaf or branch nodes.
+        /// Direct child nodes of this tree. The children may be leaf or branch nodes.
         [[nodiscard]]
-        std::vector<std::reference_wrapper<Octree>>
-            Children() { return {children_.begin(), children_.end()}; }
-
-        /// Const references to the direct child nodes of this tree.
-        /// The children may be leaf or branch nodes.
-        [[nodiscard]]
-        std::vector<std::reference_wrapper<const Octree>>
-            Children() const { return {children_.cbegin(), children_.cend()}; }
+        std::vector<Octree> const& Children() const { return children_; }
 
         /// Shapes contained in this node of the tree.
         [[nodiscard]]
@@ -181,16 +172,17 @@ namespace gravity::geometry
         ///     Nodes removed are back-inserted into the list.
         void Update(std::list<std::shared_ptr<IShape>>& removed);
 
-        /// Returns @c true if this node contains shapes, @c false otherwise.
-        [[nodiscard]]
-        bool HasShapes() const;
-
         /// Returns @c true if only one of this node's children has shapes,
         /// @c false otherwise.
         bool OneChildHasShapes(Orthant& child) const;
 
-        /// Insert shapes in @c this tree colliding with @p bounds into @p colliding.
+        /// Build shapes in @c this tree colliding with @p bounds into @p colliding.
         void GetColliding(BoundingBox const& bounds, std::list<std::shared_ptr<IShape>>& colliding) const;
+
+        /// Returns @c true if this node is a leaf node (i.e. no children),
+        /// @c false otherwise.
+        [[nodiscard]]
+        bool IsLeaf() const { return children_.empty(); }
 
         double looseness_{}; ///< @c Octree::Looseness
         double min_width_{}; ///< @ Octree::MinWidth
