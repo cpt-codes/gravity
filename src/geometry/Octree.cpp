@@ -7,19 +7,19 @@ namespace gravity::geometry
         BoundingBox bounds,
         double const looseness,
         double const min_width,
-        unsigned const max_shapes
+        unsigned const max_per_node
     )
         : bounds_(std::move(bounds)),
-        looseness_(looseness),
-        min_width_(min_width),
-        max_shapes_(max_shapes)
+          looseness_(looseness),
+          min_width_(min_width),
+          max_per_node_(max_per_node)
     {
 
     }
 
-    bool Octree::Insert(std::shared_ptr<IShape> const& shape, Bounded const bounded) // NOLINT(misc-no-recursion)
+    bool Octree::Insert(std::shared_ptr<Particle> const& particle, Bounded const bounded) // NOLINT(misc-no-recursion)
     {
-        if (!shape || !Contains(shape->Bounds(), bounded))
+        if (!particle || !Contains(particle->Bounds(), bounded))
         {
             return false;
         }
@@ -29,9 +29,9 @@ namespace gravity::geometry
 
         if (IsLeaf())
         {
-            if (shapes_.size() < MaxShapes() || IsMinWidth())
+            if (particles_.size() < MaxParticlesPerNode() || IsMinWidth())
             {
-                shapes_.push_back(shape);
+                particles_.push_back(particle);
                 return true;
             }
 
@@ -40,31 +40,31 @@ namespace gravity::geometry
 
         // Try inserting into a child node, else keep it in this node
 
-        if (!NearestChild(shape).Insert(shape))
+        if (!NearestChild(particle).Insert(particle))
         {
-            shapes_.push_back(shape);
+            particles_.push_back(particle);
         }
 
         return true;
     }
 
-    bool Octree::Remove(std::shared_ptr<IShape> const& shape) // NOLINT(misc-no-recursion)
+    bool Octree::Remove(std::shared_ptr<Particle> const& particle) // NOLINT(misc-no-recursion)
     {
-        if (!shape)
+        if (!particle)
         {
             return false;
         }
 
         // Try to remove from this node first
 
-        if (shapes_.remove(shape) > 0)
+        if (particles_.remove(particle) > 0)
         {
             return true;
         }
 
         // Failed to remove from this node. If not a leaf, try removing from the nearest child
 
-        if (IsLeaf() || !NearestChild(shape).Remove(shape))
+        if (IsLeaf() || !NearestChild(particle).Remove(particle))
         {
             return false;
         }
@@ -79,9 +79,9 @@ namespace gravity::geometry
         return true;
     }
 
-    std::list<std::shared_ptr<IShape>> Octree::Update()
+    std::list<std::shared_ptr<Particle>> Octree::Update()
     {
-        std::list<std::shared_ptr<IShape>> removed;
+        std::list<std::shared_ptr<Particle>> removed;
 
         Update(removed);
 
@@ -93,18 +93,18 @@ namespace gravity::geometry
         // Enable ADL
         using std::swap;
 
-        // Shrinking does not apply to leaf nodes or nodes with shapes
-        if (IsLeaf() || !shapes_.empty())
+        // Shrinking does not apply to leaf nodes or nodes with particles.
+        if (IsLeaf() || !particles_.empty())
         {
             return;
         }
 
         // We can shrink the tree to a child only if only one child contains
-        // shapes.
+        // particles.
 
         Orthant orthant;
 
-        if (!OneChildHasShapes(orthant))
+        if (!OneChildHasParticles(orthant))
         {
             return;
         }
@@ -112,7 +112,7 @@ namespace gravity::geometry
         auto* child = &children_[orthant];
 
         auto subtree = Octree(child->bounds_.ShrinkTo(orthant),
-                              looseness_, min_width_, max_shapes_);
+                              looseness_, min_width_, max_per_node_);
 
         // Swap subtree with this, then this with child. this will contain the
         // previous contents of child (new root node), child will contain the
@@ -144,7 +144,7 @@ namespace gravity::geometry
         // Construct leaf node and branch to construct children
 
         auto root = Octree(bounds_.ExpandFrom(orthant), looseness_,
-                           min_width_, max_shapes_);
+                           min_width_, max_per_node_);
 
         root.Branch();
 
@@ -177,9 +177,9 @@ namespace gravity::geometry
             return false;
         }
 
-        for (auto const& shape : shapes_)
+        for (auto const& particle : particles_)
         {
-            if (shape && shape->Bounds().Intersects(bounds))
+            if (particle && particle->Bounds().Intersects(bounds))
             {
                 return true;
             }
@@ -196,9 +196,9 @@ namespace gravity::geometry
         return true;
     }
 
-    std::list<std::shared_ptr<IShape>> Octree::Colliding(BoundingBox const& bounds) const
+    std::list<std::shared_ptr<Particle>> Octree::Colliding(BoundingBox const& bounds) const
     {
-        std::list<std::shared_ptr<IShape>> colliding;
+        std::list<std::shared_ptr<Particle>> colliding;
 
         GetColliding(bounds, colliding);
 
@@ -212,7 +212,7 @@ namespace gravity::geometry
             return child.Empty();
         };
 
-        return std::ranges::all_of(children_, empty) && shapes_.empty();
+        return std::ranges::all_of(children_, empty) && particles_.empty();
     }
 
     void swap(Octree& lhs, Octree& rhs)
@@ -228,9 +228,9 @@ namespace gravity::geometry
 
         swap(lhs.looseness_, rhs.looseness_);
         swap(lhs.min_width_, rhs.min_width_);
-        swap(lhs.max_shapes_, rhs.max_shapes_);
+        swap(lhs.max_per_node_, rhs.max_per_node_);
         swap(lhs.bounds_, rhs.bounds_);
-        swap(lhs.shapes_, rhs.shapes_);
+        swap(lhs.particles_, rhs.particles_);
         swap(lhs.children_, rhs.children_);
     }
 
@@ -241,27 +241,27 @@ namespace gravity::geometry
 
     bool Octree::ShouldMerge() const
     {
-        auto count = shapes_.size();
+        auto count = particles_.size();
 
         for (auto const& child : children_)
         {
-            count += child.shapes_.size();
+            count += child.particles_.size();
 
-            if (count > MaxShapes())
+            if (count > MaxParticlesPerNode())
             {
                 return false;
             }
         }
 
-        return count <= MaxShapes();
+        return count <= MaxParticlesPerNode();
     }
 
-    Octree& Octree::NearestChild(std::shared_ptr<IShape> const& shape)
+    Octree& Octree::NearestChild(std::shared_ptr<Particle> const& particle)
     {
         assert(!IsLeaf());
-        assert(shape != nullptr);
+        assert(particle != nullptr);
 
-        return children_.at(bounds_.Orthant(shape->Bounds().Centre()));
+        return children_.at(bounds_.Orthant(particle->Bounds().Centre()));
     }
 
     void Octree::Branch() // NOLINT(misc-no-recursion)
@@ -275,24 +275,24 @@ namespace gravity::geometry
         for (auto orthant = 0U; orthant < children_.capacity(); ++orthant)
         {
             children_.emplace_back(bounds_.ShrinkTo(orthant),
-                                   looseness_, min_width_, max_shapes_);
+                                   looseness_, min_width_, max_per_node_);
         }
 
-        // Move shapes into child nodes, where possible
+        // Move particles into child nodes, where possible
 
-        auto it = shapes_.begin();
+        auto it = particles_.begin();
 
-        while(it != shapes_.end())
+        while(it != particles_.end())
         {
-            auto const& shape = *it;
+            auto const& particle = *it;
 
-            if (!NearestChild(shape).Insert(shape))
+            if (!NearestChild(particle).Insert(particle))
             {
                 ++it;
                 continue;
             }
 
-            shapes_.erase(it++);
+            particles_.erase(it++);
         }
     }
 
@@ -300,7 +300,7 @@ namespace gravity::geometry
     {
         for (auto& child : children_)
         {
-            shapes_.splice(shapes_.end(), child.shapes_);
+            particles_.splice(particles_.end(), child.particles_);
         }
 
         // Clear the nodes, but hold onto the reserved memory as it might
@@ -309,46 +309,46 @@ namespace gravity::geometry
         children_.clear();
     }
 
-    void Octree::Update(std::list<std::shared_ptr<IShape>>& removed) // NOLINT(misc-no-recursion)
+    void Octree::Update(std::list<std::shared_ptr<Particle>>& removed) // NOLINT(misc-no-recursion)
     {
-        // Recursively update children, collating all shapes, until we reach a leaf node
+        // Recursively update children, collating all particles, until we reach a leaf node
 
         for (auto& child : children_)
         {
             child.Update(removed);
         }
 
-        // Iterator to shape removed from another node
+        // Iterator starting at the particles removed from another node
         auto previously_removed = removed.begin();
 
-        // Once a leaf node is reached, remove unbounded shapes and insert
+        // Once a leaf node is reached, remove unbounded particles and insert
         // at the end of the removed list
         {
-            auto it = shapes_.begin();
+            auto it = particles_.begin();
 
-            while (it != shapes_.end())
+            while (it != particles_.end())
             {
-                auto const &shape = *it;
+                auto const &particle = *it;
 
-                if (shape && Contains(shape->Bounds(), Bounded::Loosely))
+                if (particle && Contains(particle->Bounds(), Bounded::Loosely))
                 {
                     ++it;
                     continue;
                 }
 
-                removed.splice(removed.begin(), shapes_, it++);
+                removed.splice(removed.begin(), particles_, it++);
             }
         }
 
-        // Now, try to insert the shapes that were previously removed
+        // Now, try to insert the particles that were previously removed
         {
             auto it = previously_removed;
 
             while (it != removed.end())
             {
-                auto const& shape = *it;
+                auto const& particle = *it;
 
-                if (shape && !Insert(shape, Bounded::Tightly))
+                if (particle && !Insert(particle, Bounded::Tightly))
                 {
                     ++it;
                     continue;
@@ -366,9 +366,9 @@ namespace gravity::geometry
         }
     }
 
-    bool Octree::OneChildHasShapes(Orthant& child) const
+    bool Octree::OneChildHasParticles(Orthant& child) const
     {
-        bool has_shapes{};
+        bool has_particles{};
 
         for (auto i = 0U; i < children_.size(); ++i)
         {
@@ -377,31 +377,31 @@ namespace gravity::geometry
                 continue;
             }
 
-            if (has_shapes)
+            if (has_particles)
             {
                 return false;
             }
 
-            has_shapes = true;
+            has_particles = true;
             child = i;
         }
 
-        return has_shapes;
+        return has_particles;
     }
 
     void Octree::GetColliding(BoundingBox const& bounds, // NOLINT(misc-no-recursion)
-        std::list<std::shared_ptr<IShape>>& colliding) const
+        std::list<std::shared_ptr<Particle>>& colliding) const
     {
         if (!bounds_.Intersects(bounds))
         {
             return;
         }
 
-        for (auto const& shape : shapes_)
+        for (auto const& particle : particles_)
         {
-            if (shape && shape->Bounds().Intersects(bounds))
+            if (particle && particle->Bounds().Intersects(bounds))
             {
-                colliding.push_back(shape);
+                colliding.push_back(particle);
             }
         }
 

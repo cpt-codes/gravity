@@ -3,12 +3,11 @@
 
 #include "gravity/geometry/Vector.h"
 #include "gravity/geometry/BoundingBox.h"
-#include "gravity/geometry/IShape.h"
 
 namespace gravity
 {
     /// An ellipsoid particle with mass, position, velocity and acceleration.
-    class Particle : public geometry::IShape
+    class Particle
     {
     public:
         /// Mass of the particle
@@ -46,7 +45,7 @@ namespace gravity
 
         /// Bounding box of the ellipsoid
         [[nodiscard]]
-        geometry::BoundingBox const& Bounds() const override { return bounds_; }
+        geometry::BoundingBox const& Bounds() const { return bounds_; }
 
     private:
         double mass_{ 1.0 };

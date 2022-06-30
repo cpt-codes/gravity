@@ -15,7 +15,6 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Vector.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/BoundingBox.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/geometry/IShape.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Octree.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
