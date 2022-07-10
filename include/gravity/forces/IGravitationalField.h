@@ -3,35 +3,27 @@
 
 #include "gravity/Particle.h"
 #include "gravity/geometry/Vector.h"
+#include "gravity/forces/IField.h"
 
 namespace gravity::forces
 {
-    class IGravitationalField
+    /// IGravitationalField provides an interface for classes implementing
+    /// inter-particle force calculations due to gravitational attraction.
+    class IGravitationalField : public IField
     {
     public:
-        /// Compute the gravitational acceleration that @p subject is subject
-        /// to due to @p source.
-        [[nodiscard]] virtual geometry::Vector Acceleration(Particle const& source, Particle const& subject) const = 0;
+        /// NIST Newtonian constant of gravitation:
+        /// https://physics.nist.gov/cgi-bin/cuu/Value?bg
+        static constexpr auto DefaultGravitationalConstant = 6.67430e10-11;
 
-        /// Compute the gravitational force that @p subject is subject to due
-        /// to @p source.
-        [[maybe_unused]] [[nodiscard]] geometry::Vector Force(Particle const& source, Particle const& subject) const
-        {
-            return subject.Mass() * Acceleration(source, subject);
-        }
+        [[nodiscard]]
+        double GravConst() const { return grav_const_; }
 
-        /// Compute the gravitational field that @p subject is subject to due to @p source.
-        geometry::Vector operator()(Particle const& source, Particle const& subject) const
-        {
-            return Acceleration(source, subject);
-        }
-
-        [[nodiscard]] double GravConst() const { return grav_; }
-        [[nodiscard]] double& GravConst() { return grav_; }
+        [[nodiscard]]
+        double& GravConst() { return grav_const_; }
 
         IGravitationalField() = default;
-
-        virtual ~IGravitationalField() = default;
+        ~IGravitationalField() override = default;
 
     protected:
         // The destructor of this class must be virtual hence the rule of five applies.
@@ -45,7 +37,7 @@ namespace gravity::forces
         IGravitationalField& operator=(IGravitationalField&&) noexcept = default;
 
     private:
-        double grav_{ 6.67430e10-11 }; // Gravitational constant
+        double grav_const_{ DefaultGravitationalConstant }; // Gravitational constant
     };
 }
 

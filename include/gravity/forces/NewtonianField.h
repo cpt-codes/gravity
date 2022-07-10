@@ -11,7 +11,8 @@ namespace gravity::forces
     class NewtonianField final : public IGravitationalField
     {
     public:
-        [[nodiscard]] geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
+        [[nodiscard]]
+        geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
         {
             // See https://en.wikipedia.org/wiki/Newton%27s_law_of_universal_gravitation for reference
 

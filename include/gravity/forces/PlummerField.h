@@ -11,7 +11,8 @@ namespace gravity::forces
     class PlummerField final : public IGravitationalField
     {
     public:
-        [[nodiscard]] geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
+        [[nodiscard]]
+        geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
         {
             namespace ublas = geometry::ublas;
 

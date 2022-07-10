@@ -9,6 +9,7 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/MassCalculator.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Particle.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/forces/IField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/IGravitationalField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/NewtonianField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/PlummerField.h"
