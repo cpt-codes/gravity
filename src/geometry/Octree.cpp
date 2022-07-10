@@ -17,7 +17,8 @@ namespace gravity::geometry
 
     }
 
-    bool Octree::Insert(std::shared_ptr<Particle> const& particle, Bounded const bounded) // NOLINT(misc-no-recursion)
+    bool Octree::Insert(std::shared_ptr<Particle> const& particle, // NOLINT(misc-no-recursion)
+                        Bounded const bounded)
     {
         if (!particle || !Contains(particle->Bounds(), bounded))
         {
@@ -40,7 +41,7 @@ namespace gravity::geometry
 
         // Try inserting into a child node, else keep it in this node
 
-        if (!NearestChild(particle).Insert(particle))
+        if (!NearestChild(particle).Insert(particle, bounded))
         {
             particles_.push_back(particle);
         }
@@ -79,11 +80,11 @@ namespace gravity::geometry
         return true;
     }
 
-    std::list<std::shared_ptr<Particle>> Octree::Update()
+    std::list<std::shared_ptr<Particle>> Octree::Update(Bounded const bounded)
     {
         std::list<std::shared_ptr<Particle>> removed;
 
-        Update(removed);
+        Update(removed, bounded);
 
         return removed;
     }
@@ -172,7 +173,7 @@ namespace gravity::geometry
 
     bool Octree::IsColliding(BoundingBox const& bounds) const // NOLINT(misc-no-recursion)
     {
-        if (!bounds_.Intersects(bounds, Looseness())) // Do the bounds loosely intersect?
+        if (!bounds_.Intersects(bounds, Looseness())) // particles might be loosely contained
         {
             return false;
         }
@@ -212,7 +213,7 @@ namespace gravity::geometry
             return child.Empty();
         };
 
-        return std::ranges::all_of(children_, empty) && particles_.empty();
+        return particles_.empty() && std::ranges::all_of(children_, empty);
     }
 
     void swap(Octree& lhs, Octree& rhs)
@@ -286,7 +287,7 @@ namespace gravity::geometry
         {
             auto const& particle = *it;
 
-            if (!NearestChild(particle).Insert(particle))
+            if (!NearestChild(particle).Insert(particle, Bounded::Tightly))
             {
                 ++it;
                 continue;
@@ -309,13 +310,14 @@ namespace gravity::geometry
         children_.clear();
     }
 
-    void Octree::Update(std::list<std::shared_ptr<Particle>>& removed) // NOLINT(misc-no-recursion)
+    void Octree::Update(std::list<std::shared_ptr<Particle>>& removed, // NOLINT(misc-no-recursion)
+                        Bounded const bounded)
     {
         // Recursively update children, collating all particles, until we reach a leaf node
 
         for (auto& child : children_)
         {
-            child.Update(removed);
+            child.Update(removed, bounded);
         }
 
         // Iterator starting at the particles removed from another node
@@ -323,39 +325,35 @@ namespace gravity::geometry
 
         // Once a leaf node is reached, remove unbounded particles and insert
         // at the end of the removed list
+
+        auto it = particles_.begin();
+
+        while (it != particles_.end())
         {
-            auto it = particles_.begin();
+            auto const &particle = *it;
 
-            while (it != particles_.end())
+            if (particle && Contains(particle->Bounds(), bounded))
             {
-                auto const &particle = *it;
-
-                if (particle && Contains(particle->Bounds(), Bounded::Loosely))
-                {
-                    ++it;
-                    continue;
-                }
-
-                removed.splice(removed.begin(), particles_, it++);
+                ++it;
+                continue;
             }
+
+            removed.splice(removed.begin(), particles_, it++);
         }
 
         // Now, try to insert the particles that were previously removed
+
+        while (previously_removed != removed.end())
         {
-            auto it = previously_removed;
+            auto const& particle = *previously_removed;
 
-            while (it != removed.end())
+            if (particle && !Insert(particle, bounded))
             {
-                auto const& particle = *it;
-
-                if (particle && !Insert(particle, Bounded::Tightly))
-                {
-                    ++it;
-                    continue;
-                }
-
-                removed.erase(it++);
+                ++previously_removed;
+                continue;
             }
+
+            removed.erase(previously_removed++);
         }
 
         // Check for possible merger
@@ -390,9 +388,9 @@ namespace gravity::geometry
     }
 
     void Octree::GetColliding(BoundingBox const& bounds, // NOLINT(misc-no-recursion)
-        std::list<std::shared_ptr<Particle>>& colliding) const
+                              std::list<std::shared_ptr<Particle>>& colliding) const
     {
-        if (!bounds_.Intersects(bounds))
+        if (!bounds_.Intersects(bounds, Looseness())) // particles might be loosely contained
         {
             return;
         }

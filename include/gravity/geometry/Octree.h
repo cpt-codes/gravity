@@ -55,7 +55,7 @@ namespace gravity::geometry
         ///     Multiple insertions of the same @c particle are not checked.
         /// @return
         ///     @c true if the @p particle was inserted, @c false otherwise.
-        bool Insert(std::shared_ptr<Particle> const& particle, Bounded bounded = Bounded::Loosely);
+        bool Insert(std::shared_ptr<Particle> const& particle, Bounded bounded = Bounded::Tightly);
 
         /// @brief
         ///     Remove a @p particle from the tree.
@@ -67,20 +67,18 @@ namespace gravity::geometry
         bool Remove(std::shared_ptr<Particle> const& particle);
 
         /// @brief
-        ///     Particles within the tree re-inserted using their current
+        ///     The tree is updated to reflect changes in the particles
         ///     @c BoundingBox.
         /// @details
         ///     Particles are removed bottom-up and re-inserted at higher level
         ///     nodes, thus letting them cascade back down into the correct
-        ///     node. Each node will automatically branch and/or merge given
-        ///     the same conditions in @c Insert and @c Remove are met. This
-        ///     will be more efficient than removing and re-inserting where
-        ///     there are incremental changes in bounds.
+        ///     node. Optionally, the operation may be done tightly or loosely.
         /// @return
         ///     A list of particles that no longer fit within the tree.
-        std::list<std::shared_ptr<Particle>> Update();
+        std::list<std::shared_ptr<Particle>> Update(Bounded bounded = Bounded::Loosely);
 
         /// Shrinks this node to one of its children, if possible.
+        [[maybe_unused]]
         void Shrink();
 
         /// Grow the tree in the direction of the given point. A new root node
@@ -168,10 +166,20 @@ namespace gravity::geometry
         /// Particles within child nodes are merged into @c this node.
         void Merge();
 
-        /// @copydoc Octree::Update()
+        /// @brief
+        ///     Particles within the tree re-inserted using their current
+        ///     @c BoundingBox.
+        /// @details
+        ///     Particles are removed bottom-up and re-inserted at higher level
+        ///     nodes, thus letting them cascade back down into the correct
+        ///     node. Each node will automatically branch and/or merge given
+        ///     the same conditions in @c Insert and @c Remove are met. This
+        ///     will be more efficient than removing and re-inserting where
+        ///     there are incremental changes in bounds. The operation may be
+        ///     done loosely or tightly.
         /// @param[out] removed
         ///     Nodes removed are back-inserted into the list.
-        void Update(std::list<std::shared_ptr<Particle>>& removed);
+        void Update(std::list<std::shared_ptr<Particle>>& removed, Bounded bounded);
 
         /// Returns @c true if only one of this node's children has particles,
         /// @c false otherwise.

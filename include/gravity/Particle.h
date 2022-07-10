@@ -10,7 +10,12 @@ namespace gravity
     class Particle
     {
     public:
-        /// Mass of the particle
+        /// Mass of a default constructed @c Particle
+        static constexpr auto DefaultMass = 1.0;
+
+        explicit Particle(double mass = DefaultMass) : mass_(mass) {}
+
+        /// Mass of the particle. Constant for the lifetime of the @c Particle.
         [[nodiscard]]
         double Mass() const { return mass_; }
 
@@ -48,7 +53,7 @@ namespace gravity
         geometry::BoundingBox const& Bounds() const { return bounds_; }
 
     private:
-        double mass_{ 1.0 };
+        double mass_;
         geometry::Vector velocity_;
         geometry::Vector acceleration_;
 
