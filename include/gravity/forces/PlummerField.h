@@ -1,12 +1,12 @@
- #ifndef GRAVITY_INCLUDE_GRAVITY_PLUMMERFIELD_H_
-#define GRAVITY_INCLUDE_GRAVITY_PLUMMERFIELD_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_FORCES_PLUMMERFIELD_H_
+#define GRAVITY_INCLUDE_GRAVITY_FORCES_PLUMMERFIELD_H_
 
 #include <cmath>
 
-#include "gravity/IGravitationalField.h"
 #include "gravity/Particle.h"
+#include "gravity/forces/IGravitationalField.h"
 
-namespace gravity
+namespace gravity::forces
 {
     class PlummerField final : public IGravitationalField
     {
@@ -25,4 +25,4 @@ namespace gravity
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_PLUMMERFIELD_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_FORCES_PLUMMERFIELD_H_

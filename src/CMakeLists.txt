@@ -7,11 +7,11 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
 # List of headers
 set(HEADER_LIST
-    "${PROJECT_INCLUDE_DIR}/gravity/IGravitationalField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/MassCalculator.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/NewtonianField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Particle.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/PlummerField.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/forces/IGravitationalField.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/forces/NewtonianField.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/forces/PlummerField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/except/ErrorList.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Vector.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Orthant.h"

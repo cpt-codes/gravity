@@ -1,12 +1,12 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_NEWTONIANFIELD_H_
-#define GRAVITY_INCLUDE_GRAVITY_NEWTONIANFIELD_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_FORCES_NEWTONIANFIELD_H_
+#define GRAVITY_INCLUDE_GRAVITY_FORCES_NEWTONIANFIELD_H_
 
 #include <cmath>
 
-#include "gravity/IGravitationalField.h"
 #include "gravity/Particle.h"
+#include "gravity/forces/IGravitationalField.h"
 
-namespace gravity
+namespace gravity::forces
 {
     class NewtonianField final : public IGravitationalField
     {
@@ -22,4 +22,4 @@ namespace gravity
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_NEWTONIANFIELD_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_FORCES_NEWTONIANFIELD_H_

@@ -1,10 +1,10 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_IGRAVITATIONALFIELD_H_
-#define GRAVITY_INCLUDE_GRAVITY_IGRAVITATIONALFIELD_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_FORCES_IGRAVITATIONALFIELD_H_
+#define GRAVITY_INCLUDE_GRAVITY_FORCES_IGRAVITATIONALFIELD_H_
 
-#include "gravity/geometry/Vector.h"
 #include "gravity/Particle.h"
+#include "gravity/geometry/Vector.h"
 
-namespace gravity
+namespace gravity::forces
 {
     class IGravitationalField
     {
@@ -49,4 +49,4 @@ namespace gravity
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_IGRAVITATIONALFIELD_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_FORCES_IGRAVITATIONALFIELD_H_
