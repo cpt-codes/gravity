@@ -8,6 +8,7 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 # List of headers
 set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/IGravitationalField.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/MassCalculator.h"
     "${PROJECT_INCLUDE_DIR}/gravity/NewtonianField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Particle.h"
     "${PROJECT_INCLUDE_DIR}/gravity/PlummerField.h"
@@ -24,12 +25,16 @@ set(HEADER_LIST
 # Find Boost
 find_package(Boost 1.77.0 REQUIRED)
 
+# Find Intel TBB
+find_package(TBB REQUIRED)
+
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(gravity
     ${HEADER_LIST}
     except/ErrorList.cpp
     geometry/BoundingBox.cpp
     geometry/Octree.cpp
+    MassCalculator.cpp
     threads/TaskQueue.cpp
     threads/ThreadPool.cpp)
 
@@ -37,6 +42,9 @@ add_library(gravity
 target_include_directories(gravity
     PUBLIC ${PROJECT_INCLUDE_DIR}
     PUBLIC ${Boost_INCLUDE_DIRS})
+
+# Link to required libraries
+target_link_libraries(gravity PRIVATE TBB::tbb)
 
 # All users of this library will need at least C++20
 target_compile_features(gravity PUBLIC cxx_std_20)
