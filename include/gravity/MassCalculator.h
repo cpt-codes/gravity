@@ -8,16 +8,17 @@
 #include <tbb/concurrent_unordered_map.h>
 
 #include "gravity/geometry/Vector.h"
-#include "gravity/geometry/Octree.h"
+#include "gravity/Octree.h"
 
 namespace gravity
 {
     /// @brief
     ///     A class that computes (and caches) the total mass and centre of
-    ///     mass of Octree nodes.
+    ///     mass of Octree nodes. The calculator is thread-safe.
     /// @details
     ///     Results are cached only when the cache does not have an entry
-    ///     for the given Octree node.
+    ///     for the given Octree node. All member functions are synchronised
+    ///     with minimal locking to optimise performance.
     class MassCalculator
     {
     public:
@@ -32,16 +33,23 @@ namespace gravity
         /// Remove all calculation results from the cache.
         void ClearCache();
 
-        /// Remove the cached result for the given Octree.
+        /// Remove the cached result for the given Octree only. Cached results
+        /// for this Octree's children will not be removed.
         [[maybe_unused]]
-        void ClearCache(geometry::Octree const& octree);
+        void ClearCache(Octree const& octree);
 
-        /// Computes, caches and returns the total mass and centre of mass of
-        /// Octree nodes.
-        PointMass Calculate(geometry::Octree const& octree);
+        /// @brief
+        ///     Computes, caches and returns the total mass and centre of mass
+        ///     of Octree nodes.
+        /// @details
+        ///     If threads simultaneously request the calculation for an Octree
+        ///     which is not cached, the "winning" thread to the cache entry
+        ///     will perform the calculation while all other threads wait on
+        ///     the result.
+        PointMass Calculate(Octree const& octree);
 
         /// "Shortcut" for MassCalculator::Calculate
-        PointMass operator()(geometry::Octree const& octree) { return Calculate(octree); }
+        PointMass operator()(Octree const& octree) { return Calculate(octree); }
 
     private:
         struct CacheEntry
@@ -53,13 +61,13 @@ namespace gravity
         };
 
         std::shared_mutex cache_mutex_; ///< Guard the cache's un-synchronized operations.
-        tbb::concurrent_unordered_map<geometry::Octree const*, CacheEntry> cache_; ///< Cache of calculation results.
+        tbb::concurrent_unordered_map<Octree const*, CacheEntry> cache_; ///< Cache of calculation results.
 
         /// Wait until the CacheEntry's result is ready, then return it.
         static PointMass WaitForResult(CacheEntry& entry);
 
         /// Find the cache entry if present, otherwise calculate and cache.
-        PointMass FindOrCalculate(geometry::Octree const& octree);
+        PointMass FindOrCalculate(Octree const& octree);
 
         /// @brief
         ///     Attempt to calculate the Octree's total mass and centre of
@@ -68,12 +76,12 @@ namespace gravity
         ///     Where multiple threads attempt a calculation, threads that lose
         ///     the race to the cache entry mutex will wait on the result. Only
         ///     The winner will calculate the result.
-        PointMass CalculateAndCache(geometry::Octree const& octree);
+        PointMass CalculateAndCache(Octree const& octree);
 
         /// Calculate the Octree's total mass and centre of mass. The result is
         /// stored in @p point_mass. The cache is used recursively to obtain
         /// the results of child nodes to the given Octree.
-        void Calculate(geometry::Octree const& octree, PointMass& point_mass);
+        void Calculate(Octree const& octree, PointMass& point_mass);
     };
 }
 

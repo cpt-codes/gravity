@@ -9,7 +9,7 @@ namespace gravity
         cache_.clear();
     }
 
-    void MassCalculator::ClearCache(geometry::Octree const& octree)
+    void MassCalculator::ClearCache(Octree const& octree)
     {
         std::lock_guard lock(cache_mutex_);
 
@@ -17,7 +17,7 @@ namespace gravity
     }
 
     MassCalculator::PointMass
-    MassCalculator::Calculate(geometry::Octree const& octree) // NOLINT(misc-no-recursion)
+    MassCalculator::Calculate(Octree const& octree) // NOLINT(misc-no-recursion)
     {
         std::shared_lock shared_lock(cache_mutex_);
 
@@ -38,7 +38,7 @@ namespace gravity
     }
 
     MassCalculator::PointMass
-    MassCalculator::FindOrCalculate(geometry::Octree const& octree) // NOLINT(misc-no-recursion)
+    MassCalculator::FindOrCalculate(Octree const& octree) // NOLINT(misc-no-recursion)
     {
         auto it = cache_.find(&octree);
 
@@ -51,7 +51,7 @@ namespace gravity
     }
 
     MassCalculator::PointMass
-    MassCalculator::CalculateAndCache(geometry::Octree const& octree) // NOLINT(misc-no-recursion)
+    MassCalculator::CalculateAndCache(Octree const& octree) // NOLINT(misc-no-recursion)
     {
         // We construct the CacheEntry in-place using std::piecewise_construct
         // because the mutex is non-copyable and non-movable.
@@ -88,7 +88,7 @@ namespace gravity
         return point_mass;
     }
 
-    void MassCalculator::Calculate(geometry::Octree const& octree, // NOLINT(misc-no-recursion)
+    void MassCalculator::Calculate(Octree const& octree, // NOLINT(misc-no-recursion)
                                    PointMass& point_mass)
     {
         for (auto const& child: octree.Children())

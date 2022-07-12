@@ -1,10 +1,10 @@
-#include "gravity/geometry/Octree.h"
+#include "gravity/Octree.h"
 
-namespace gravity::geometry
+namespace gravity
 {
     Octree::Octree
     (
-        BoundingBox bounds,
+        geometry::BoundingBox bounds,
         double const looseness,
         double const min_width,
         unsigned const max_per_node
@@ -103,7 +103,7 @@ namespace gravity::geometry
         // We can shrink the tree to a child only if only one child contains
         // particles.
 
-        Orthant orthant;
+        geometry::Orthant orthant;
 
         if (!OneChildHasParticles(orthant))
         {
@@ -125,7 +125,7 @@ namespace gravity::geometry
         swap(*this, *child);
     }
 
-    void Octree::Grow(Vector const& point) // NOLINT(misc-no-recursion)
+    void Octree::Grow(geometry::Vector const& point) // NOLINT(misc-no-recursion)
     {
         // Enable ADL
         using std::swap;
@@ -161,7 +161,7 @@ namespace gravity::geometry
         swap(*this, root);
     }
 
-    bool Octree::Contains(BoundingBox const& bounds, Bounded const bounded) const
+    bool Octree::Contains(geometry::BoundingBox const& bounds, Bounded const bounded) const
     {
         if (bounded == Bounded::Loosely)
         {
@@ -171,7 +171,7 @@ namespace gravity::geometry
         return bounds_.Contains(bounds);
     }
 
-    bool Octree::IsColliding(BoundingBox const& bounds) const // NOLINT(misc-no-recursion)
+    bool Octree::IsColliding(geometry::BoundingBox const& bounds) const // NOLINT(misc-no-recursion)
     {
         if (!bounds_.Intersects(bounds, Looseness())) // particles might be loosely contained
         {
@@ -197,7 +197,7 @@ namespace gravity::geometry
         return true;
     }
 
-    std::list<std::shared_ptr<Particle>> Octree::Colliding(BoundingBox const& bounds) const
+    std::list<std::shared_ptr<Particle>> Octree::Colliding(geometry::BoundingBox const& bounds) const
     {
         std::list<std::shared_ptr<Particle>> colliding;
 
@@ -237,7 +237,7 @@ namespace gravity::geometry
 
     bool Octree::IsMinWidth() const
     {
-        return any_less_than_or_equal_to(bounds_.Extents(), MinWidth() / 2.0);
+        return geometry::any_less_than_or_equal_to(bounds_.Extents(), MinWidth() / 2.0);
     }
 
     bool Octree::ShouldMerge() const
@@ -271,7 +271,7 @@ namespace gravity::geometry
 
         // Allocate and instantiate the child nodes
 
-        children_.reserve(Orthant::Max());
+        children_.reserve(geometry::Orthant::Max());
 
         for (auto orthant = 0U; orthant < children_.capacity(); ++orthant)
         {
@@ -364,7 +364,7 @@ namespace gravity::geometry
         }
     }
 
-    bool Octree::OneChildHasParticles(Orthant& child) const
+    bool Octree::OneChildHasParticles(geometry::Orthant& child) const
     {
         bool has_particles{};
 
@@ -387,7 +387,7 @@ namespace gravity::geometry
         return has_particles;
     }
 
-    void Octree::GetColliding(BoundingBox const& bounds, // NOLINT(misc-no-recursion)
+    void Octree::GetColliding(geometry::BoundingBox const& bounds, // NOLINT(misc-no-recursion)
                               std::list<std::shared_ptr<Particle>>& colliding) const
     {
         if (!bounds_.Intersects(bounds, Looseness())) // particles might be loosely contained

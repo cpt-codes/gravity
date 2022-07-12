@@ -1,5 +1,5 @@
-#ifndef GRAVITY_INCLUDE_GRAVITY_GEOMETRY_OCTREE_H_
-#define GRAVITY_INCLUDE_GRAVITY_GEOMETRY_OCTREE_H_
+#ifndef GRAVITY_INCLUDE_GRAVITY_OCTREE_H_
+#define GRAVITY_INCLUDE_GRAVITY_OCTREE_H_
 
 #include <algorithm>
 #include <list>
@@ -13,7 +13,7 @@
 #include "gravity/geometry/BoundingBox.h"
 #include "gravity/Particle.h"
 
-namespace gravity::geometry
+namespace gravity
 {
     /// The state describing how a particle is bounded by a node within a
     /// Octree
@@ -39,7 +39,7 @@ namespace gravity::geometry
         static constexpr auto DefaultMaxParticlesPerNode = 8U;
 
         explicit Octree(
-            BoundingBox bounds,
+            geometry::BoundingBox bounds,
             double looseness = DefaultLooseness,
             double min_width = DefaultMinWidth,
             unsigned max_per_node = DefaultMaxParticlesPerNode);
@@ -68,7 +68,7 @@ namespace gravity::geometry
 
         /// @brief
         ///     The tree is updated to reflect changes in the particles
-        ///     @c BoundingBox.
+        ///     @c geometry::BoundingBox.
         /// @details
         ///     Particles are removed bottom-up and re-inserted at higher level
         ///     nodes, thus letting them cascade back down into the correct
@@ -83,23 +83,23 @@ namespace gravity::geometry
 
         /// Grow the tree in the direction of the given point. A new root node
         /// is created and swapped with @c this.
-        void Grow(Vector const& point);
+        void Grow(geometry::Vector const& point);
 
         /// Returns @c true if the tree contains the @p particle, @c false
         /// otherwise. @p loosely determines whether @p particle is contained
         /// loosely or tightly.
         [[nodiscard]]
-        bool Contains(BoundingBox const& bounds, Bounded bounded) const;
+        bool Contains(geometry::BoundingBox const& bounds, Bounded bounded) const;
 
         /// Return @c true if any particle within @c this tree is colliding with
         /// @p bounds, @c false otherwise.
         [[nodiscard]]
-        bool IsColliding(BoundingBox const& bounds) const;
+        bool IsColliding(geometry::BoundingBox const& bounds) const;
 
         /// Return a list of particles within @c this tree colliding with
         /// @p bounds.
         [[maybe_unused, nodiscard]]
-        std::list<std::shared_ptr<Particle>> Colliding(BoundingBox const& bounds) const;
+        std::list<std::shared_ptr<Particle>> Colliding(geometry::BoundingBox const& bounds) const;
 
         /// Returns @c true if the Octree contains any particles, otherwise
         /// @c false.
@@ -118,7 +118,7 @@ namespace gravity::geometry
         /// Bounds within which all children and particles of the tree are
         /// contained.
         [[nodiscard]]
-        BoundingBox const& Bounds() const { return bounds_; }
+        geometry::BoundingBox const& Bounds() const { return bounds_; }
 
         /// The looseness is a multiplier applied to the bounds of a node when
         /// determining whether a particle is contained by said node. Hence,
@@ -168,7 +168,7 @@ namespace gravity::geometry
 
         /// @brief
         ///     Particles within the tree re-inserted using their current
-        ///     @c BoundingBox.
+        ///     @c geometry::BoundingBox.
         /// @details
         ///     Particles are removed bottom-up and re-inserted at higher level
         ///     nodes, thus letting them cascade back down into the correct
@@ -183,11 +183,11 @@ namespace gravity::geometry
 
         /// Returns @c true if only one of this node's children has particles,
         /// @c false otherwise.
-        bool OneChildHasParticles(Orthant& child) const;
+        bool OneChildHasParticles(geometry::Orthant& child) const;
 
         /// Insert particles in @c this tree colliding with @p bounds into
         /// @p colliding.
-        void GetColliding(BoundingBox const& bounds, std::list<std::shared_ptr<Particle>>& colliding) const;
+        void GetColliding(geometry::BoundingBox const& bounds, std::list<std::shared_ptr<Particle>>& colliding) const;
 
         /// Returns @c true if this node is a leaf node (i.e. no children),
         /// @c false otherwise.
@@ -197,10 +197,10 @@ namespace gravity::geometry
         double looseness_{}; ///< @c Octree::Looseness
         double min_width_{}; ///< @ Octree::MinWidth
         unsigned max_per_node_{}; ///< @c Octree::MaxParticlesPerNode
-        BoundingBox bounds_; ///< @c Octree::Bounds
+        geometry::BoundingBox bounds_; ///< @c Octree::Bounds
         std::list<std::shared_ptr<Particle>> particles_; ///< Particles loosely contained by this node
         std::vector<Octree> children_; ///< Contiguous array of child nodes
     };
 }
 
-#endif //GRAVITY_INCLUDE_GRAVITY_GEOMETRY_OCTREE_H_
+#endif //GRAVITY_INCLUDE_GRAVITY_OCTREE_H_

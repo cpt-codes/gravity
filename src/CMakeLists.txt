@@ -7,7 +7,9 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
 # List of headers
 set(HEADER_LIST
+    "${PROJECT_INCLUDE_DIR}/gravity/BarnesHutAlgorithm.h"
     "${PROJECT_INCLUDE_DIR}/gravity/MassCalculator.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/Octree.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Particle.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/IField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/IGravitationalField.h"
@@ -17,7 +19,6 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Vector.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Orthant.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/BoundingBox.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/geometry/Octree.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/ITask.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/Task.h"
     "${PROJECT_INCLUDE_DIR}/gravity/threads/TaskQueue.h"
@@ -32,10 +33,11 @@ find_package(TBB REQUIRED)
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(gravity
     ${HEADER_LIST}
+    BarnesHutAlgorithm.cpp
+    MassCalculator.cpp
+    Octree.cpp
     except/ErrorList.cpp
     geometry/BoundingBox.cpp
-    geometry/Octree.cpp
-    MassCalculator.cpp
     threads/TaskQueue.cpp
     threads/ThreadPool.cpp)
 
