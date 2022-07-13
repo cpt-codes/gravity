@@ -21,7 +21,7 @@ namespace gravity
             return {};
         }
 
-        return Acceleration(*tree_, *particle);
+        return Acceleration(tree_->Root(), *particle);
     }
 
     geometry::Vector BarnesHutAlgorithm::Force(std::shared_ptr<Particle const> const& particle) const
@@ -33,7 +33,7 @@ namespace gravity
             return {};
         }
 
-        return particle->Mass() * Acceleration(*tree_, *particle);
+        return particle->Mass() * Acceleration(tree_->Root(), *particle);
     }
 
     double BarnesHutAlgorithm::ApproximationThreshold() const
@@ -100,11 +100,9 @@ namespace gravity
             return;
         }
 
-        auto removed = tree_->Update();
-
-        // TODO do something with the removed particles? Grow to fit?
-
         mass_calculator_.ClearCache();
+
+        auto removed_particles = tree_->Update();
     }
 
     bool BarnesHutAlgorithm::ShouldApproximate(geometry::Vector const& point,
@@ -118,7 +116,7 @@ namespace gravity
     geometry::Vector
     BarnesHutAlgorithm::Acceleration(Particle const& source, Particle const& subject) const
     {
-        assert(field != nullptr);
+        assert(field_ != nullptr);
 
         return field_->Acceleration(source, subject);
     }
@@ -136,18 +134,18 @@ namespace gravity
     }
 
     geometry::Vector
-    BarnesHutAlgorithm::Acceleration(Octree const& tree, // NOLINT(misc-no-recursion)
+    BarnesHutAlgorithm::Acceleration(Node const& node, // NOLINT(misc-no-recursion)
                                      Particle const& particle) const
 
     {
-        if (ShouldApproximate(particle.Displacement(), tree.Bounds()))
+        if (ShouldApproximate(particle.Displacement(), node.Bounds()))
         {
-            return Acceleration(mass_calculator_(tree), particle);
+            return Acceleration(mass_calculator_(node), particle);
         }
 
         geometry::Vector acceleration;
 
-        for (auto const& other_particle : tree.Particles())
+        for (auto const& other_particle : node.Particles())
         {
             if (other_particle)
             {
@@ -155,7 +153,7 @@ namespace gravity
             }
         }
 
-        for (auto const& child : tree.Children())
+        for (auto const& child : node.Children())
         {
             acceleration += Acceleration(child, particle);
         }

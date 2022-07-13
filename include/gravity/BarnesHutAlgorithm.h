@@ -91,12 +91,6 @@ namespace gravity
         void Update();
 
     private:
-        mutable std::shared_mutex mutex_; ///< Synchronizes all "read-write" operations on the classes interface.
-        mutable MassCalculator mass_calculator_; ///< Octree node centre of mass calculator.
-        double threshold_{ DefaultApproximationThreshold }; ///< BarnesHutAlgorithm::ApproximationThreshold
-        std::unique_ptr<Octree> tree_; ///< Octree containing all particles in the simulation.
-        std::unique_ptr<forces::IField> field_; ///< The field describing all forces between particles.
-
         /// Returns true if the Barnes Hut algorithm should approximate force
         /// calculations for all particles within a node's @p bounds for a
         /// particle at the given @p point, false otherwise.
@@ -116,7 +110,13 @@ namespace gravity
         /// Returns the acceleration on the @p particle due to all particles
         /// within the @c tree.
         [[nodiscard]]
-        geometry::Vector Acceleration(Octree const& tree, Particle const& particle) const;
+        geometry::Vector Acceleration(Node const& node, Particle const& particle) const;
+
+        mutable std::shared_mutex mutex_; ///< Synchronizes all "read-write" operations on the classes interface.
+        mutable MassCalculator mass_calculator_; ///< Octree node centre of mass calculator.
+        double threshold_{ DefaultApproximationThreshold }; ///< BarnesHutAlgorithm::ApproximationThreshold
+        std::unique_ptr<Octree> tree_; ///< Octree containing all particles in the simulation.
+        std::unique_ptr<forces::IField> field_; ///< The field describing all forces between particles.
     };
 }
 

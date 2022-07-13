@@ -9,19 +9,19 @@ namespace gravity
         cache_.clear();
     }
 
-    void MassCalculator::ClearCache(Octree const& octree)
+    void MassCalculator::ClearCache(Node const& node)
     {
         std::lock_guard lock(cache_mutex_);
 
-        cache_.unsafe_erase(&octree);
+        cache_.unsafe_erase(&node);
     }
 
     MassCalculator::PointMass
-    MassCalculator::Calculate(Octree const& octree) // NOLINT(misc-no-recursion)
+    MassCalculator::Calculate(Node const& node) // NOLINT(misc-no-recursion)
     {
         std::shared_lock shared_lock(cache_mutex_);
 
-        return FindOrCalculate(octree);
+        return FindOrCalculate(node);
     }
 
     MassCalculator::PointMass
@@ -38,26 +38,26 @@ namespace gravity
     }
 
     MassCalculator::PointMass
-    MassCalculator::FindOrCalculate(Octree const& octree) // NOLINT(misc-no-recursion)
+    MassCalculator::FindOrCalculate(Node const& node) // NOLINT(misc-no-recursion)
     {
-        auto it = cache_.find(&octree);
+        auto it = cache_.find(&node);
 
         if (it == cache_.end())
         {
-            return CalculateAndCache(octree);
+            return CalculateAndCache(node);
         }
 
         return WaitForResult(it->second);
     }
 
     MassCalculator::PointMass
-    MassCalculator::CalculateAndCache(Octree const& octree) // NOLINT(misc-no-recursion)
+    MassCalculator::CalculateAndCache(Node const& node) // NOLINT(misc-no-recursion)
     {
         // We construct the CacheEntry in-place using std::piecewise_construct
         // because the mutex is non-copyable and non-movable.
 
         auto [it, success] = cache_.emplace(std::piecewise_construct,
-                                            std::forward_as_tuple(&octree),
+                                            std::forward_as_tuple(&node),
                                             std::forward_as_tuple());
 
         // The operation may fail if multiple threads attempt to emplace the
@@ -77,7 +77,7 @@ namespace gravity
         {
             std::lock_guard lock(it->second.mutex);
 
-            Calculate(octree, point_mass);
+            Calculate(node, point_mass);
 
             it->second.result = point_mass;
             it->second.is_cached = true;
@@ -88,10 +88,10 @@ namespace gravity
         return point_mass;
     }
 
-    void MassCalculator::Calculate(Octree const& octree, // NOLINT(misc-no-recursion)
+    void MassCalculator::Calculate(Node const& node, // NOLINT(misc-no-recursion)
                                    PointMass& point_mass)
     {
-        for (auto const& child: octree.Children())
+        for (auto const& child: node.Children())
         {
             auto [mass, displacement] = FindOrCalculate(child);
 
@@ -99,7 +99,7 @@ namespace gravity
             point_mass.displacement += mass * displacement;
         }
 
-        for (auto const& particle: octree.Particles())
+        for (auto const& particle: node.Particles())
         {
             point_mass.mass += particle->Mass();
             point_mass.displacement += particle->Mass() * particle->Displacement();

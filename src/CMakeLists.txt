@@ -9,6 +9,7 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/BarnesHutAlgorithm.h"
     "${PROJECT_INCLUDE_DIR}/gravity/MassCalculator.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/Node.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Octree.h"
     "${PROJECT_INCLUDE_DIR}/gravity/Particle.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/IField.h"
@@ -35,6 +36,7 @@ add_library(gravity
     ${HEADER_LIST}
     BarnesHutAlgorithm.cpp
     MassCalculator.cpp
+    Node.cpp
     Octree.cpp
     except/ErrorList.cpp
     geometry/BoundingBox.cpp
