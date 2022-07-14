@@ -36,8 +36,10 @@ namespace gravity
         ///     their children's bounds will not breach @p min_width.
         /// @return
         ///     @c true if the @p particle was inserted, @c false otherwise.
-        bool Insert(std::shared_ptr<Particle> const& particle, double looseness,
-                    double min_width, unsigned capacity);
+        bool Insert(std::shared_ptr<Particle> const& particle,
+                    double looseness,
+                    double min_width,
+                    unsigned capacity);
 
         /// @brief
         ///     Remove a @p particle from the node or its ancestors.
@@ -46,7 +48,8 @@ namespace gravity
         ///     be merged into parent nodes if the parent and child nodes
         ///     collectively contain less particles than the @p capacity
         ///     particles.
-        bool Remove(std::shared_ptr<Particle> const& particle, unsigned capacity);
+        bool Remove(std::shared_ptr<Particle> const& particle,
+                    unsigned capacity);
 
         /// @brief
         ///     The node is updated to reflect changes in the particles
@@ -58,7 +61,9 @@ namespace gravity
         /// @return
         ///     A list of particles that no longer fit within the tree.
         std::list<std::shared_ptr<Particle>>
-        Update(double looseness, double min_width, unsigned capacity);
+        Update(double looseness,
+               double min_width,
+               unsigned capacity);
 
         /// If possible, the bounds of the node are shrunk to one of its
         /// children. The child become the new root node. Return @c true if it
@@ -68,26 +73,32 @@ namespace gravity
         /// Grows the bounds of the node in the direction of the given point.
         /// A new root node is created and swapped with @c this. The bounds are
         /// grown by a factor of two, due to the design of an Octree.
-        void Grow(geometry::Vector const& point, double looseness, double min_width, unsigned capacity);
+        void Grow(geometry::Vector const& point,
+                  double looseness,
+                  double min_width,
+                  unsigned capacity);
 
         /// Returns @c true if the node or its ancestors loosely contain the
         /// @p particle using @p looseness, @c false otherwise.
         [[nodiscard]]
-        bool Contains(geometry::BoundingBox const& bounds, double looseness) const;
+        bool Contains(geometry::BoundingBox const& bounds,
+                      double looseness) const;
 
         /// Return @c true if any @c Particle contained by this node or its
         /// ancestors is colliding with @p bounds, @c false otherwise. If the
         /// node does not loosely intersect with the @p bounds, its ancestors
         /// are not traversed.
         [[nodiscard]]
-        bool IsColliding(geometry::BoundingBox const& bounds, double looseness) const;
+        bool IsColliding(geometry::BoundingBox const& bounds,
+                         double looseness) const;
 
         /// Return a list of particles within this node and its ancestors
         /// colliding with @p bounds. If the node does not loosely intersect
         /// with the @p bounds, its ancestors are not traversed.
         [[nodiscard]]
         std::list<std::shared_ptr<Particle>>
-        Colliding(geometry::BoundingBox const& bounds, double looseness) const;
+        Colliding(geometry::BoundingBox const& bounds,
+                  double looseness) const;
 
         /// Returns @c true if the Octree contains any particles, otherwise
         /// @c false.
@@ -151,7 +162,9 @@ namespace gravity
         /// @param[out] removed
         ///     Nodes removed are back-inserted into the list.
         void Update(std::list<std::shared_ptr<Particle>>& removed,
-                    double looseness, double min_width, unsigned capacity);
+                    double looseness,
+                    double min_width,
+                    unsigned capacity);
 
         /// Returns @c true if only one of this node's children has particles,
         /// @c false otherwise.

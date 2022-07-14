@@ -2,15 +2,12 @@
 
 namespace gravity
 {
-    Octree::Octree
-    (
-        geometry::BoundingBox const& bounds,
-        double const looseness,
-        double const min_width,
-        unsigned const node_capacity,
-        int growth_limit,
-        int shrink_limit
-    ) :
+    Octree::Octree(geometry::BoundingBox const& bounds,
+                   double const looseness,
+                   double const min_width,
+                   unsigned const node_capacity,
+                   int growth_limit,
+                   int shrink_limit) :
         root_(bounds),
         looseness_(looseness),
         min_width_(min_width),
@@ -96,6 +93,11 @@ namespace gravity
     {
         auto removed = root_.Update(looseness_, min_width_, node_capacity_);
 
+        if (growth_limit_ == 0 || growth_limit_ == resized_)
+        {
+            return removed;
+        }
+
         for (auto it = removed.begin(); it != removed.end(); )
         {
             auto particle = *it;
@@ -123,7 +125,8 @@ namespace gravity
         return root_.IsColliding(bounds, looseness_);
     }
 
-    std::list<std::shared_ptr<Particle>> Octree::Colliding(geometry::BoundingBox const& bounds) const
+    std::list<std::shared_ptr<Particle>>
+    Octree::Colliding(geometry::BoundingBox const& bounds) const
     {
         return root_.Colliding(bounds, looseness_);
     }

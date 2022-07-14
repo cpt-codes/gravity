@@ -9,7 +9,9 @@ namespace gravity
     }
 
     bool Node::Insert(std::shared_ptr<Particle> const& particle, // NOLINT(misc-no-recursion)
-                      double const looseness, double const min_width, unsigned const capacity)
+                      double const looseness,
+                      double const min_width,
+                      unsigned const capacity)
     {
         if (!particle || !Contains(particle->Bounds(), looseness))
         {
@@ -73,7 +75,9 @@ namespace gravity
     }
 
     std::list<std::shared_ptr<Particle>> 
-    Node::Update(double const looseness, double const min_width, unsigned const capacity)
+    Node::Update(double const looseness,
+                 double const min_width,
+                 unsigned const capacity)
     {
         std::list<std::shared_ptr<Particle>> removed;
 
@@ -119,8 +123,10 @@ namespace gravity
         return true;
     }
 
-    void Node::Grow(geometry::Vector const& point, double const looseness,
-                    double const min_width, unsigned const capacity)
+    void Node::Grow(geometry::Vector const& point,
+                    double const looseness,
+                    double const min_width,
+                    unsigned const capacity)
     {
         // Enable ADL
         using std::swap;
@@ -188,7 +194,8 @@ namespace gravity
     }
 
     std::list<std::shared_ptr<Particle>>
-    Node::Colliding(geometry::BoundingBox const& bounds, double const looseness) const
+    Node::Colliding(geometry::BoundingBox const& bounds,
+                    double const looseness) const
     {
         std::list<std::shared_ptr<Particle>> colliding;
 
@@ -299,7 +306,9 @@ namespace gravity
     }
 
     void Node::Update(std::list<std::shared_ptr<Particle>>& removed, // NOLINT(misc-no-recursion)
-                      double const looseness, double const min_width, unsigned const capacity)
+                      double const looseness,
+                      double const min_width,
+                      unsigned const capacity)
     {
         // Recursively update children, collating all particles, until we reach a leaf node
 

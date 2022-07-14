@@ -81,7 +81,8 @@ namespace gravity
         /// Return a list of particles within @c this tree colliding with
         /// @p bounds.
         [[nodiscard, maybe_unused]]
-        std::list<std::shared_ptr<Particle>> Colliding(geometry::BoundingBox const& bounds) const;
+        std::list<std::shared_ptr<Particle>>
+        Colliding(geometry::BoundingBox const& bounds) const;
 
         /// Returns @c true if the tree contains any particles, otherwise
         /// @c false.
@@ -135,7 +136,8 @@ namespace gravity
         friend void swap(Octree& lhs, Octree& rhs);
 
     private:
-        void GetParticles(Node const& node, std::list<std::shared_ptr<Particle>>& particles) const;
+        void GetParticles(Node const& node,
+                          std::list<std::shared_ptr<Particle>>& particles) const;
 
         Node root_; ///< Root node of the Octree
         double looseness_{ DefaultLooseness }; ///< @c Octree::Looseness
