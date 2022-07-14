@@ -76,7 +76,7 @@ namespace gravity
         [[nodiscard]]
         std::unique_ptr<Octree> Tree();
 
-        void Tree (std::unique_ptr<Octree> octree);
+        void Tree(std::unique_ptr<Octree> octree);
 
         /// The @c IField that computes forces due to inter-particle
         /// interactions. This will transfer ownership of the IField to the
@@ -87,30 +87,35 @@ namespace gravity
         void Field(std::unique_ptr<forces::IField> field);
 
         /// Update the @c Octree to the particle's current positions. The cache
-        /// of @c Octree node mass calculations is cleared.
-        void Update();
+        /// of @c Octree node mass calculations is cleared. Removed particles
+        /// are returned in a linked list.
+        std::list<std::shared_ptr<Particle>> Update();
 
     private:
         /// Returns true if the Barnes Hut algorithm should approximate force
         /// calculations for all particles within a node's @p bounds for a
         /// particle at the given @p point, false otherwise.
         [[nodiscard]]
-        bool ShouldApproximate(geometry::Vector const& point, geometry::BoundingBox const& bounds) const;
+        bool ShouldApproximate(geometry::Vector const& point,
+                               geometry::BoundingBox const& bounds) const;
 
         /// Returns the acceleration on @p subject due to @p source in the
         /// @c IField.
-        [[nodiscard]]
-        geometry::Vector Acceleration(Particle const& source, Particle const& subject) const;
+        void AddAcceleration(Particle const& source,
+                             Particle const& subject,
+                             geometry::Vector& acceleration) const;
 
         /// Returns the acceleration on @p subject due to the @p source centre
         /// of mass in the @c IField.
-        [[nodiscard]]
-        geometry::Vector Acceleration(MassCalculator::PointMass const& source, Particle const& subject) const;
+        void AddAcceleration(MassCalculator::PointMass const &source,
+                             Particle const &subject,
+                             geometry::Vector& acceleration) const;
 
-        /// Returns the acceleration on the @p particle due to all particles
-        /// within the @c tree.
-        [[nodiscard]]
-        geometry::Vector Acceleration(Node const& node, Particle const& particle) const;
+        /// Adds the @p acceleration on the @p particle due to all particles
+        /// within the @c node.
+        void AddAcceleration(Node const& node,
+                             std::shared_ptr<Particle const> const& particle,
+                             geometry::Vector& acceleration) const;
 
         mutable std::shared_mutex mutex_; ///< Synchronizes all "read-write" operations on the classes interface.
         mutable MassCalculator mass_calculator_; ///< Octree node centre of mass calculator.

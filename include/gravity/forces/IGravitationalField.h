@@ -19,7 +19,7 @@ namespace gravity::forces
         [[nodiscard]]
         double GravConst() const { return grav_const_; }
 
-        [[nodiscard]]
+        [[nodiscard, maybe_unused]]
         double& GravConst() { return grav_const_; }
 
         IGravitationalField() = default;

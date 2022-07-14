@@ -39,6 +39,7 @@ add_library(gravity
     Node.cpp
     Octree.cpp
     except/ErrorList.cpp
+    forces/IField.cpp
     geometry/BoundingBox.cpp
     threads/TaskQueue.cpp
     threads/ThreadPool.cpp)

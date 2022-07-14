@@ -21,19 +21,21 @@ namespace gravity
             return {};
         }
 
-        return Acceleration(tree_->Root(), *particle);
+        geometry::Vector acceleration;
+
+        AddAcceleration(tree_->Root(), particle, acceleration);
+
+        return acceleration;
     }
 
     geometry::Vector BarnesHutAlgorithm::Force(std::shared_ptr<Particle const> const& particle) const
     {
-        std::shared_lock lock(mutex_);
-
-        if (!particle || !tree_ || !field_)
+        if (!particle)
         {
             return {};
         }
 
-        return particle->Mass() * Acceleration(tree_->Root(), *particle);
+        return particle->Mass() * Acceleration(particle);
     }
 
     double BarnesHutAlgorithm::ApproximationThreshold() const
@@ -91,18 +93,18 @@ namespace gravity
         field_ = std::move(field);
     }
 
-    void BarnesHutAlgorithm::Update()
+    std::list<std::shared_ptr<Particle>> BarnesHutAlgorithm::Update()
     {
         std::lock_guard lock(mutex_);
 
         if (!tree_)
         {
-            return;
+            return {};
         }
 
         mass_calculator_.ClearCache();
 
-        auto removed_particles = tree_->Update();
+        return tree_->Update();
     }
 
     bool BarnesHutAlgorithm::ShouldApproximate(geometry::Vector const& point,
@@ -113,51 +115,47 @@ namespace gravity
         return geometry::any_less_than(bounds.Extents(), threshold_ * distance);
     }
 
-    geometry::Vector
-    BarnesHutAlgorithm::Acceleration(Particle const& source, Particle const& subject) const
+    void BarnesHutAlgorithm::AddAcceleration(Particle const& source,
+                                             Particle const& subject,
+                                             geometry::Vector& acceleration) const
     {
         assert(field_ != nullptr);
 
-        return field_->Acceleration(source, subject);
+        field_->AddAcceleration(source, subject, acceleration);
     }
 
-    geometry::Vector
-    BarnesHutAlgorithm::Acceleration(MassCalculator::PointMass const& source,
-                                     Particle const& subject) const
+    void BarnesHutAlgorithm::AddAcceleration(MassCalculator::PointMass const &source,
+                                             Particle const &subject,
+                                             geometry::Vector& acceleration) const
     {
         Particle source_particle;
 
         source_particle.Mass() = source.mass;
         source_particle.Displacement() = source.displacement;
 
-        return Acceleration(source_particle, subject);
+        AddAcceleration(source_particle, subject, acceleration);
     }
 
-    geometry::Vector
-    BarnesHutAlgorithm::Acceleration(Node const& node, // NOLINT(misc-no-recursion)
-                                     Particle const& particle) const
-
+    void BarnesHutAlgorithm::AddAcceleration(Node const& node, // NOLINT(misc-no-recursion)
+                                             std::shared_ptr<Particle const> const& particle,
+                                             geometry::Vector& acceleration) const
     {
-        if (ShouldApproximate(particle.Displacement(), node.Bounds()))
+        if (ShouldApproximate(particle->Displacement(), node.Bounds()))
         {
-            return Acceleration(mass_calculator_(node), particle);
+            AddAcceleration(mass_calculator_(node), *particle, acceleration);
         }
-
-        geometry::Vector acceleration;
 
         for (auto const& other_particle : node.Particles())
         {
-            if (other_particle)
+            if (other_particle && particle != other_particle)
             {
-                acceleration += Acceleration(*other_particle, particle);
+                AddAcceleration(*other_particle, *particle, acceleration);
             }
         }
 
         for (auto const& child : node.Children())
         {
-            acceleration += Acceleration(child, particle);
+            AddAcceleration(child, particle, acceleration);
         }
-
-        return acceleration;
     }
 }

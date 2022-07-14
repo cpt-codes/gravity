@@ -11,23 +11,19 @@ namespace gravity::forces
     class IField
     {
     public:
-        /// Compute the acceleration that @p subject is subject to due to @p source.
-        [[nodiscard]]
-        virtual geometry::Vector Acceleration(Particle const& source, Particle const& subject) const = 0;
+        /// Compute the acceleration that @p subject is subject to due to
+        /// @p source and add it to @p acceleration.
+        virtual void AddAcceleration(
+            Particle const& source, Particle const& subject, geometry::Vector& acceleration) const = 0;
 
-        /// Compute the force that @p subject is subject to due to @p source.
-        [[maybe_unused, nodiscard]]
-        geometry::Vector Force(Particle const& source, Particle const& subject) const
-        {
-            return subject.Mass() * Acceleration(source, subject);
-        }
+        void operator()(Particle const& source, Particle const& subject, geometry::Vector& acceleration) const;
 
-        /// Compute the field that @p subject is subject to due to @p source.
+        /// Return the acceleration that @p subject is subject to due to
+        /// @p source.
         [[nodiscard]]
-        geometry::Vector operator()(Particle const& source, Particle const& subject) const
-        {
-            return Acceleration(source, subject);
-        }
+        geometry::Vector Acceleration(Particle const& source, Particle const& subject) const;
+
+        geometry::Vector operator()(Particle const& source, Particle const& subject) const;
 
         IField() = default;
 

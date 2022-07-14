@@ -11,8 +11,8 @@ namespace gravity::forces
     class PlummerField final : public IGravitationalField
     {
     public:
-        [[nodiscard]]
-        geometry::Vector Acceleration(Particle const& source, Particle const& subject) const override
+        void AddAcceleration(
+            Particle const& source, Particle const& subject, geometry::Vector& acceleration) const override
         {
             namespace ublas = geometry::ublas;
 
@@ -20,7 +20,7 @@ namespace gravity::forces
 
             auto r = source.Displacement() - subject.Displacement();
 
-            return -GravConst() * source.Mass() * r
+            acceleration += -GravConst() * source.Mass() * r
                 / std::pow(ublas::norm_2_square(r) + ublas::norm_2_square(source.Radius()), 1.5);
         }
     };
