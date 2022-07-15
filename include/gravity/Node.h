@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "gravity/geometry/Vector.h"
 #include "gravity/geometry/Orthant.h"
 #include "gravity/geometry/BoundingBox.h"
+#include "gravity/threads/ThreadPool.h"
 
 namespace gravity
 {
@@ -61,9 +63,10 @@ namespace gravity
         /// @return
         ///     A list of particles that no longer fit within the tree.
         std::list<std::shared_ptr<Particle>>
-        Update(double looseness,
-               double min_width,
-               unsigned capacity);
+            Update(double looseness,
+                   double min_width,
+                   unsigned capacity,
+                   std::shared_ptr<threads::ThreadPool> const& pool = nullptr);
 
         /// If possible, the bounds of the node are shrunk to one of its
         /// children. The child become the new root node. Return @c true if it
@@ -97,8 +100,8 @@ namespace gravity
         /// with the @p bounds, its ancestors are not traversed.
         [[nodiscard]]
         std::list<std::shared_ptr<Particle>>
-        Colliding(geometry::BoundingBox const& bounds,
-                  double looseness) const;
+            Colliding(geometry::BoundingBox const& bounds,
+                      double looseness) const;
 
         /// Returns @c true if the Octree contains any particles, otherwise
         /// @c false.
@@ -121,6 +124,13 @@ namespace gravity
         friend void swap(Node& lhs, Node& rhs);
 
     private:
+        /// Determines how a Node traverses its subtree.
+        enum class Traverse : bool
+        {
+            Ancestors, ///< Traverse all ancestors of the Node.
+            Children ///< Traverse only the direct children of the Node.
+        };
+
         /// Returns @c true if the node's bounds are less than or equal to
         /// @p min_width, @c false otherwise.
         [[nodiscard]]
@@ -148,23 +158,30 @@ namespace gravity
         void Merge();
 
         /// @brief
-        ///     Particles within the node and its ancestors are inserted using
-        ///     their current @c geometry::BoundingBox.
+        ///     Particles within the node are re-inserted using their current
+        ///     @c geometry::BoundingBox.
         /// @details
-        ///     Particles are removed bottom-up from ancestor nodes and
-        ///     inserted at higher level nodes, thus letting them cascade back
-        ///     down into the correct ancestor. Each node will automatically
-        ///     branch and/or merge given the same conditions in @c Insert and
-        ///     @c Remove are met. This will be more efficient than removing
-        ///     and re-inserting where there are incremental changes in bounds.
-        ///     Particles are inserted and removed using @p looseness,
-        ///     @p min_width, and @p capacity.
+        ///     Particles that no longer fit within the node's bounds are
+        ///     removed from the node and inserted at the front of the list.
+        ///     The node will attempt to insert particles already present in
+        ///     the list, and if successful they are removed from the list.
+        ///     The node will branch and grow where necessary.
+        ///
+        ///     The operation can be performed recursively by passing
+        ///     @p traverse = Traverse::Ancestors. Unbounded particles are
+        ///     removed from the deepest ancestors first and re-inserted in
+        ///     higher level ancestors. This will be more efficient than
+        ///     removing and re-inserting particles from the root node when
+        ///     incremental changes in bounds have occurred. Particles are
+        ///     inserted and removed using @p looseness, @p min_width, and
+        ///     @p capacity.
         /// @param[out] removed
-        ///     Nodes removed are back-inserted into the list.
+        ///     Nodes removed are inserted into the front of the list.
         void Update(std::list<std::shared_ptr<Particle>>& removed,
                     double looseness,
                     double min_width,
-                    unsigned capacity);
+                    unsigned capacity,
+                    Traverse traverse);
 
         /// Returns @c true if only one of this node's children has particles,
         /// @c false otherwise.

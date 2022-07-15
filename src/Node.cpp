@@ -74,14 +74,42 @@ namespace gravity
         return true;
     }
 
-    std::list<std::shared_ptr<Particle>> 
-    Node::Update(double const looseness,
-                 double const min_width,
-                 unsigned const capacity)
+    std::list<std::shared_ptr<Particle>>
+        Node::Update(double const looseness,
+                     double const min_width,
+                     unsigned const capacity,
+                     std::shared_ptr<threads::ThreadPool> const& pool)
     {
         std::list<std::shared_ptr<Particle>> removed;
 
-        Update(removed, looseness, min_width, capacity);
+        if (!pool)
+        {
+            Update(removed, looseness, min_width, capacity, Traverse::Ancestors);
+
+            return removed;
+        }
+
+        std::mutex mutex;
+
+        auto update = [&removed, &mutex, looseness, min_width, capacity](Node& child)
+        {
+            std::list<std::shared_ptr<Particle>> removed_from_child;
+
+            child.Update(removed_from_child, looseness, min_width, capacity, Traverse::Ancestors);
+
+            if (removed_from_child.empty())
+            {
+                return;
+            }
+
+            std::lock_guard lock(mutex);
+
+            removed.splice(removed.begin(), removed_from_child);
+        };
+
+        pool->ForEach(children_, update); // Block until results are ready
+
+        Update(removed, looseness, min_width, capacity, Traverse::Children);
 
         return removed;
     }
@@ -194,8 +222,8 @@ namespace gravity
     }
 
     std::list<std::shared_ptr<Particle>>
-    Node::Colliding(geometry::BoundingBox const& bounds,
-                    double const looseness) const
+        Node::Colliding(geometry::BoundingBox const& bounds,
+                        double const looseness) const
     {
         std::list<std::shared_ptr<Particle>> colliding;
 
@@ -308,13 +336,17 @@ namespace gravity
     void Node::Update(std::list<std::shared_ptr<Particle>>& removed, // NOLINT(misc-no-recursion)
                       double const looseness,
                       double const min_width,
-                      unsigned const capacity)
+                      unsigned const capacity,
+                      Traverse const traverse)
     {
         // Recursively update children, collating all particles, until we reach a leaf node
 
-        for (auto& child : children_)
+        if (traverse == Traverse::Ancestors)
         {
-            child.Update(removed, looseness, min_width, capacity);
+            for (auto& child : children_)
+            {
+                child.Update(removed, looseness, min_width, capacity, traverse);
+            }
         }
 
         // Iterator starting at the particles removed from another node
