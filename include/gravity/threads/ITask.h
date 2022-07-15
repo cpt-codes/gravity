@@ -6,6 +6,7 @@ namespace gravity::threads
     class ITask
     {
     public:
+        /// Execute the ITask
         virtual void Execute() = 0;
 
         ITask() = default;

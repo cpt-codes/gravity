@@ -11,38 +11,48 @@
 
 namespace gravity::threads
 {
-    // Thread-safe queue class of Task instances. Wraps around std::queue for thread
-    // safety. Intended to be used as a means of submitting tasks in a thread-safe
-    // manner.
+    /// @brief
+    ///     Thread-safe queue class of Task instances.
+    /// @details
+    ///     Wraps around std::queue for thread safety. Intended to be used as
+    ///     a means of submitting tasks in a thread-safe manner.
     class TaskQueue
     {
     public:
         TaskQueue() = default;
 
-        // Push a new value onto the queue.
+        /// Push the @p task onto the queue.
         void Push(std::shared_ptr<ITask> task);
 
-        // Number of tasks in the queue.
+        /// Number of tasks in the queue.
         unsigned int Size() const;
 
-        // Whether the queue is empty or not.
+        /// Return @c true if the queue is empty, @c false otherwise.
+        [[maybe_unused]]
         bool Empty() const;
 
-        //  Clear all items from the queue.
+        /// Clear all items from the queue.
+        [[maybe_unused]]
         void Clear();
 
-        // Get the first value in the TaskQueue. If block is true, Pop blocks until a
-        // value is available or the instance is destructed, otherwise Pop will try to
-        // retrieve a value immediately. Also returns immediately if the queue's indicator
-        // has been set to false. Returns true if a value was successfully written
-        // to the task parameter, false otherwise.
+        /// @brief
+        ///     Pop a @p task off the queue.
+        /// @details
+        ///     If block is @c true, Pop blocks until a value is available or
+        ///     the instance is destructed, otherwise Pop will try to retrieve
+        ///     a value immediately.
+        /// @return
+        ///     Returns @c true if a value was successfully written to @p task,
+        ///     @c false otherwise. Returns immediately if the queue is closed.
         bool Pop(std::shared_ptr<ITask>& task, bool block = true);
 
-        // Whether the queue is accepting and returning tasks or not.
+        /// Returns @c true if the queue is accepting and returning tasks,
+        /// @c false otherwise.
         bool Closed() const;
+
+        /// Set closed status to @p closed.
         void Closed(bool closed);
 
-        // Destructor ensures no threads are waiting.
         ~TaskQueue();
 
         TaskQueue(TaskQueue const& other) = delete;
@@ -52,10 +62,10 @@ namespace gravity::threads
         TaskQueue& operator=(TaskQueue&& other) noexcept = delete;
 
     private:
-        mutable std::mutex mutex_; // used to synchronise use of the TaskQueue
-        std::queue<std::shared_ptr<ITask>> queue_;
-        std::condition_variable changed_; // used to wait for and communicate the state of the queue across threads
-        bool closed_{}; // whether the queue is accepting and returning tasks or not
+        mutable std::mutex mutex_; ///< Synchronizes use of the std::queue
+        std::queue<std::shared_ptr<ITask>> queue_; ///< Queue of tasks
+        std::condition_variable changed_; ///< Communicates that the state of the queue has changed
+        bool closed_{}; ///< True if the queue is accepting and returning tasks, false otherwise
     };
 }
 

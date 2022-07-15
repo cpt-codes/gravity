@@ -4,14 +4,14 @@ namespace gravity::threads
 {
     ThreadPool::ThreadPool(unsigned int const threads)
     {
-        if (threads == 0u)
+        if (threads == 0U)
         {
-            throw std::invalid_argument("ThreadPool: cannot instantiate zero threads.");
+            throw std::invalid_argument("Cannot instantiate zero threads.");
         }
 
         try
         {
-            for (auto i = 0u; i < threads; ++i)
+            for (auto i = 0U; i < threads; ++i)
             {
                 threads_.emplace_back(&ThreadPool::Worker, this);
             }
@@ -28,12 +28,7 @@ namespace gravity::threads
         // hardware concurrency can be zero if it is not computable. Therefore,
         // we must check and protect against overflow of the unsigned int.
 
-        return std::max(std::thread::hardware_concurrency(), 2u) - 1u;
-    }
-
-    void ThreadPool::Submit(std::shared_ptr<ITask> const& task)
-    {
-        queue_.Push(task);
+        return std::max(std::thread::hardware_concurrency(), 2U) - 1U;
     }
 
     ThreadPool::~ThreadPool()
@@ -49,10 +44,8 @@ namespace gravity::threads
         {
             if (queue_.Pop(task, true))
             {
-                active_++;
                 task->Execute();
                 task = nullptr;
-                active_--;
             }
         }
     }
@@ -70,7 +63,7 @@ namespace gravity::threads
         }
     }
 
-    void ThreadPool::CheckForErrors(futures_t const& futures)
+    void ThreadPool::WaitOnResults(futures_t const& futures)
     {
         except::ErrorList errors;
 
@@ -86,15 +79,19 @@ namespace gravity::threads
             {
                 future.get();
             }
+            catch (std::exception const& e)
+            {
+                errors << e.what();
+            }
             catch (...)
             {
-                errors << std::current_exception();
+                errors << "Non-standard exception caught";
             }
         }
 
         if (!errors.Empty())
         {
-            throw std::runtime_error(errors.Message());
+            throw except::async_error(errors.Message());
         }
     }
 }

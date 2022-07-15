@@ -10,11 +10,12 @@
 
 namespace gravity::threads
 {
-    // Task template for ambiguous functions
+    /// Template for ambiguous functions to be executed as an ITask
     template<typename Func, typename... Args>
     class Task final : public ITask
     {
     public:
+        /// Return value of type @c Func
         using return_t = std::invoke_result_t<std::decay_t<Func>, std::decay_t<Args>...>;
 
         explicit Task(Func&& func, Args&&... args)
@@ -23,11 +24,12 @@ namespace gravity::threads
 
         void Execute() override { task_(); }
 
+        /// Shared future containing the result of the Task
         std::shared_future<return_t> const& Future() const { return future_; }
 
     private:
-        std::packaged_task<return_t()> task_;
-        std::shared_future<return_t> future_;
+        std::packaged_task<return_t()> task_; ///< task to execute
+        std::shared_future<return_t> future_; ///< future of the task
     };
 }
 

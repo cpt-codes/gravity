@@ -29,11 +29,13 @@ namespace gravity::threads
 
     void TaskQueue::Clear()
     {
-        std::lock_guard const lock(mutex_);
-
-        while(!queue_.empty())
         {
-            queue_.pop();
+            std::lock_guard const lock(mutex_);
+
+            while (!queue_.empty())
+            {
+                queue_.pop();
+            }
         }
 
         changed_.notify_all(); // notify all waiting threads the queue is now empty
@@ -69,7 +71,7 @@ namespace gravity::threads
     }
 
     // Using the mutex, instead of an atomic, ensures that the state of the queue
-    // being open or closed is properly synchronised with pushing and popping items
+    // being open or closed is properly synchronized with pushing and popping items
     // to and from the queue.
 
     bool TaskQueue::Closed() const
@@ -82,7 +84,7 @@ namespace gravity::threads
     {
         {
             std::lock_guard const lock(mutex_);
-            closed_ = true;
+            closed_ = closed;
         }
 
         changed_.notify_all(); // notify all waiting threads the state of closed has changed

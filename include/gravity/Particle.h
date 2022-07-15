@@ -1,40 +1,64 @@
 #ifndef GRAVITY_INCLUDE_GRAVITY_PARTICLE_H_
 #define GRAVITY_INCLUDE_GRAVITY_PARTICLE_H_
 
-#include "gravity/Vector.h"
-#include "gravity/IParticle.h"
+#include "gravity/geometry/Vector.h"
+#include "gravity/geometry/BoundingBox.h"
 
 namespace gravity
 {
-    // Particle with mass, displacement, velocity and acceleration
-    class Particle final : public IParticle
+    /// An ellipsoid particle with mass, position, velocity and acceleration.
+    class Particle
     {
     public:
-        // Particle with mass m, displacement p and velocity v
-        Particle(double m, Vector const& p, Vector const& v)
-            : mass_(m), displacement_(p), velocity_(v) {}
+        /// Mass of a default constructed @c Particle
+        static constexpr auto DefaultMass = 1.0;
 
-        [[nodiscard]] double Mass() const override { return mass_; }
+        explicit Particle(double mass = DefaultMass) : mass_(mass) {}
 
-        [[nodiscard]] Vector const& Displacement() const override { return displacement_; }
+        /// Mass of the particle. Constant for the lifetime of the @c Particle.
+        [[nodiscard]]
+        double Mass() const { return mass_; }
 
-        [[nodiscard]] Vector const& Velocity() const { return velocity_; }
+        double& Mass() { return mass_; }
 
-        [[nodiscard]] Vector const& Acceleration() const { return acceleration_; }
+        /// Radius of the particle in each dimension, making it an ellipsoid
+        [[nodiscard]]
+        geometry::Vector const& Radius() const { return bounds_.Extents(); }
 
-        [[nodiscard]] double& Mass() { return mass_; }
+        void Radius(geometry::Vector const& radius) { bounds_.Extents(radius); }
 
-        [[nodiscard]] Vector& Displacement() { return displacement_; }
+        /// Displacement of the particle in space
+        [[nodiscard]]
+        geometry::Vector const& Displacement() const { return bounds_.Centre(); }
 
-        [[nodiscard]] Vector& Velocity() { return velocity_; }
+        [[nodiscard]]
+        geometry::Vector& Displacement() { return bounds_.Centre(); }
 
-        [[nodiscard]] Vector& Acceleration() { return acceleration_; }
+        /// Velocity of the particle relative to the position reference frame
+        [[nodiscard]]
+        geometry::Vector const& Velocity() const { return velocity_; }
+
+        [[nodiscard]]
+        geometry::Vector& Velocity() { return velocity_; }
+
+        /// Acceleration of the particle
+        [[nodiscard]]
+        geometry::Vector const& Acceleration() const { return acceleration_; }
+
+        [[nodiscard]]
+        geometry::Vector& Acceleration() { return acceleration_; }
+
+        /// Bounding box of the ellipsoid
+        [[nodiscard]]
+        geometry::BoundingBox const& Bounds() const { return bounds_; }
 
     private:
-        double mass_{ 1.0 };
-        Vector displacement_;
-        Vector velocity_;
-        Vector acceleration_;
+        double mass_;
+        geometry::Vector velocity_;
+        geometry::Vector acceleration_;
+
+        /// The bounds are used for the displacement and radii of the particle
+        geometry::BoundingBox bounds_;
     };
 }
 
