@@ -6,7 +6,7 @@ namespace gravity::threads
     {
         if (threads == 0U)
         {
-            throw std::invalid_argument("ThreadPool: cannot instantiate zero threads.");
+            throw std::invalid_argument("Cannot instantiate zero threads.");
         }
 
         try
@@ -29,11 +29,6 @@ namespace gravity::threads
         // we must check and protect against overflow of the unsigned int.
 
         return std::max(std::thread::hardware_concurrency(), 2U) - 1U;
-    }
-
-    void ThreadPool::Submit(std::shared_ptr<ITask> const& task)
-    {
-        queue_.Push(task);
     }
 
     ThreadPool::~ThreadPool()
@@ -68,7 +63,7 @@ namespace gravity::threads
         }
     }
 
-    void ThreadPool::CheckForErrors(futures_t const& futures)
+    void ThreadPool::WaitOnResults(futures_t const& futures)
     {
         except::ErrorList errors;
 
@@ -96,7 +91,7 @@ namespace gravity::threads
 
         if (!errors.Empty())
         {
-            throw std::runtime_error(errors.Message());
+            throw except::async_error(errors.Message());
         }
     }
 }

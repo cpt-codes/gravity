@@ -1,7 +1,6 @@
 #ifndef GRAVITY_INCLUDE_GRAVITY_THREADS_ERRORLIST_H_
 #define GRAVITY_INCLUDE_GRAVITY_THREADS_ERRORLIST_H_
 
-#include <exception>
 #include <sstream>
 #include <string>
 
