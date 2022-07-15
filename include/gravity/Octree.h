@@ -23,18 +23,15 @@ namespace gravity
     class Octree
     {
     public:
-        static constexpr auto DefaultLooseness = 1.25;
-        static constexpr auto DefaultMinWidth = 1.0;
-        static constexpr auto DefaultNodeCapacity = 8U;
         static constexpr auto DefaultGrowthLimit = 10U;
         static constexpr auto DefaultShrinkLimit = 10U;
 
         explicit Octree
         (
             geometry::BoundingBox const& bounds,
-            double looseness = DefaultLooseness,
-            double min_width = DefaultMinWidth,
-            unsigned node_capacity = DefaultNodeCapacity,
+            double looseness = Node::DefaultLooseness,
+            double min_width = Node::DefaultMinWidth,
+            unsigned node_capacity = Node::DefaultCapacity,
             int growth_limit = DefaultGrowthLimit,
             int shrink_limit = DefaultShrinkLimit
         );
@@ -140,9 +137,9 @@ namespace gravity
                           std::list<std::shared_ptr<Particle>>& particles) const;
 
         Node root_; ///< Root node of the Octree
-        double looseness_{ DefaultLooseness }; ///< @c Octree::Looseness
-        double min_width_{ DefaultMinWidth }; ///< @c Octree::MinWidth
-        unsigned node_capacity_{ DefaultNodeCapacity }; ///< @c Octree::NodeCapacity
+        double looseness_{ Node::DefaultLooseness }; ///< @c Octree::Looseness
+        double min_width_{ Node::DefaultMinWidth }; ///< @c Octree::MinWidth
+        unsigned node_capacity_{ Node::DefaultCapacity }; ///< @c Octree::NodeCapacity
         int growth_limit_{ DefaultGrowthLimit }; ///< @c Octree::GrowthLimit
         int shrink_limit_{ DefaultShrinkLimit }; ///< @c Octree::ShrinkLimit
         int resized_{}; ///< @c Octree::Resized

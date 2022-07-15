@@ -30,6 +30,10 @@ namespace gravity
     class Node
     {
     public:
+        static constexpr auto DefaultLooseness = 1.25;
+        static constexpr auto DefaultMinWidth = 1.0;
+        static constexpr auto DefaultCapacity = 8U;
+
         explicit Node(geometry::BoundingBox bounds);
 
         /// @brief
@@ -39,9 +43,9 @@ namespace gravity
         /// @return
         ///     @c true if the @p particle was inserted, @c false otherwise.
         bool Insert(std::shared_ptr<Particle> const& particle,
-                    double looseness,
-                    double min_width,
-                    unsigned capacity);
+                    double looseness = DefaultLooseness,
+                    double min_width = DefaultMinWidth,
+                    unsigned capacity = DefaultCapacity);
 
         /// @brief
         ///     Remove a @p particle from the node or its ancestors.
@@ -51,7 +55,7 @@ namespace gravity
         ///     collectively contain less particles than the @p capacity
         ///     particles.
         bool Remove(std::shared_ptr<Particle> const& particle,
-                    unsigned capacity);
+                    unsigned capacity = DefaultCapacity);
 
         /// @brief
         ///     The node is updated to reflect changes in the particles
@@ -63,9 +67,9 @@ namespace gravity
         /// @return
         ///     A list of particles that no longer fit within the tree.
         std::list<std::shared_ptr<Particle>>
-            Update(double looseness,
-                   double min_width,
-                   unsigned capacity,
+            Update(double looseness = DefaultLooseness,
+                   double min_width = DefaultMinWidth,
+                   unsigned capacity = DefaultCapacity,
                    std::shared_ptr<threads::ThreadPool> const& pool = nullptr);
 
         /// If possible, the bounds of the node are shrunk to one of its
@@ -77,15 +81,15 @@ namespace gravity
         /// A new root node is created and swapped with @c this. The bounds are
         /// grown by a factor of two, due to the design of an Octree.
         void Grow(geometry::Vector const& point,
-                  double looseness,
-                  double min_width,
-                  unsigned capacity);
+                  double looseness = DefaultLooseness,
+                  double min_width = DefaultMinWidth,
+                  unsigned capacity = DefaultCapacity);
 
         /// Returns @c true if the node or its ancestors loosely contain the
         /// @p particle using @p looseness, @c false otherwise.
         [[nodiscard]]
         bool Contains(geometry::BoundingBox const& bounds,
-                      double looseness) const;
+                      double looseness = DefaultLooseness) const;
 
         /// Return @c true if any @c Particle contained by this node or its
         /// ancestors is colliding with @p bounds, @c false otherwise. If the
@@ -93,7 +97,7 @@ namespace gravity
         /// are not traversed.
         [[nodiscard]]
         bool IsColliding(geometry::BoundingBox const& bounds,
-                         double looseness) const;
+                         double looseness = DefaultLooseness) const;
 
         /// Return a list of particles within this node and its ancestors
         /// colliding with @p bounds. If the node does not loosely intersect
@@ -101,7 +105,7 @@ namespace gravity
         [[nodiscard]]
         std::list<std::shared_ptr<Particle>>
             Colliding(geometry::BoundingBox const& bounds,
-                      double looseness) const;
+                      double looseness = DefaultLooseness) const;
 
         /// Returns @c true if the Octree contains any particles, otherwise
         /// @c false.
@@ -158,25 +162,18 @@ namespace gravity
         void Merge();
 
         /// @brief
-        ///     Particles within the node are re-inserted using their current
-        ///     @c geometry::BoundingBox.
-        /// @details
         ///     Particles that no longer fit within the node's bounds are
         ///     removed from the node and inserted at the front of the list.
         ///     The node will attempt to insert particles already present in
         ///     the list, and if successful they are removed from the list.
-        ///     The node will branch and grow where necessary.
-        ///
+        /// @details
         ///     The operation can be performed recursively by passing
-        ///     @p traverse = Traverse::Ancestors. Unbounded particles are
-        ///     removed from the deepest ancestors first and re-inserted in
-        ///     higher level ancestors. This will be more efficient than
-        ///     removing and re-inserting particles from the root node when
-        ///     incremental changes in bounds have occurred. Particles are
-        ///     inserted and removed using @p looseness, @p min_width, and
-        ///     @p capacity.
-        /// @param[out] removed
-        ///     Nodes removed are inserted into the front of the list.
+        ///     @c Traverse::Ancestors. Unbounded particles are removed from
+        ///     the deepest ancestors first and re-inserted in higher level
+        ///     ancestors. This will be more efficient than removing and re-
+        ///     inserting particles from the root node when incremental changes
+        ///     in bounds have occurred. Particles are inserted and removed
+        ///     using @p looseness, @p min_width, and @p capacity.
         void Update(std::list<std::shared_ptr<Particle>>& removed,
                     double looseness,
                     double min_width,
