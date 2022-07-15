@@ -13,6 +13,7 @@
 #include "gravity/MassCalculator.h"
 #include "gravity/forces/IField.h"
 #include "gravity/geometry/Vector.h"
+#include "gravity/threads/ThreadPool.h"
 
 namespace gravity
 {
@@ -88,8 +89,10 @@ namespace gravity
 
         /// Update the @c Octree to the particle's current positions. The cache
         /// of @c Octree node mass calculations is cleared. Removed particles
-        /// are returned in a linked list.
-        std::list<std::shared_ptr<Particle>> Update();
+        /// are returned in a linked list. Optionally, a thread pool may be
+        /// used to parallelize the operation.
+        std::list<std::shared_ptr<Particle>>
+            Update(std::shared_ptr<threads::ThreadPool> const& pool = nullptr);
 
     private:
         /// Returns true if the Barnes Hut algorithm should approximate force

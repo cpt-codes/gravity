@@ -89,9 +89,10 @@ namespace gravity
         return true;
     }
 
-    std::list<std::shared_ptr<Particle>> Octree::Update()
+    std::list<std::shared_ptr<Particle>>
+        Octree::Update(std::shared_ptr<threads::ThreadPool> const& pool)
     {
-        auto removed = root_.Update(looseness_, min_width_, node_capacity_);
+        auto removed = root_.Update(looseness_, min_width_, node_capacity_, pool);
 
         if (growth_limit_ == 0 || growth_limit_ == resized_)
         {

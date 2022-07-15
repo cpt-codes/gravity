@@ -93,7 +93,8 @@ namespace gravity
         field_ = std::move(field);
     }
 
-    std::list<std::shared_ptr<Particle>> BarnesHutAlgorithm::Update()
+    std::list<std::shared_ptr<Particle>>
+        BarnesHutAlgorithm::Update(std::shared_ptr<threads::ThreadPool> const& pool)
     {
         std::lock_guard lock(mutex_);
 
@@ -104,7 +105,7 @@ namespace gravity
 
         mass_calculator_.ClearCache();
 
-        return tree_->Update();
+        return tree_->Update(pool);
     }
 
     bool BarnesHutAlgorithm::ShouldApproximate(geometry::Vector const& point,

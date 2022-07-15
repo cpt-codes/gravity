@@ -82,12 +82,16 @@ namespace gravity
     {
         std::list<std::shared_ptr<Particle>> removed;
 
+        // If we do not have a thread pool, then perform the operation serially
+
         if (!pool)
         {
             Update(removed, looseness, min_width, capacity, Traverse::Ancestors);
 
             return removed;
         }
+
+        // Otherwise, update each child in parallel, then update this node.
 
         std::mutex mutex;
 

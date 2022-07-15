@@ -8,6 +8,7 @@
 #include "gravity/Particle.h"
 #include "gravity/Node.h"
 #include "gravity/geometry/BoundingBox.h"
+#include "gravity/threads/ThreadPool.h"
 
 namespace gravity
 {
@@ -63,7 +64,8 @@ namespace gravity
         ///     used to parallelize the operation.
         /// @return
         ///     A list of particles that no longer fit within the tree.
-        std::list<std::shared_ptr<Particle>> Update();
+        std::list<std::shared_ptr<Particle>>
+            Update(std::shared_ptr<threads::ThreadPool> const& pool = nullptr);
 
         /// Return @c true if any particle within @c this tree is colliding with
         /// @p bounds, @c false otherwise.

@@ -63,7 +63,8 @@ namespace gravity
         /// @details
         ///     Particles are removed bottom-up from the nodes ancestors and
         ///     inserted at higher level ancestors, thus letting them cascade
-        ///     back down into the correct ancestor.
+        ///     back down into the correct ancestor. Optionally, a thread pool
+        ///     may be used to parallelize the operation.
         /// @return
         ///     A list of particles that no longer fit within the tree.
         std::list<std::shared_ptr<Particle>>
