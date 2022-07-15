@@ -3,11 +3,10 @@
 
 #include <list>
 #include <memory>
+#include <stdexcept>
 
 #include "gravity/Particle.h"
 #include "gravity/Node.h"
-#include "gravity/geometry/Vector.h"
-#include "gravity/geometry/Orthant.h"
 #include "gravity/geometry/BoundingBox.h"
 
 namespace gravity
@@ -60,15 +59,11 @@ namespace gravity
         /// @brief
         ///     The tree is updated to reflect changes in the particles
         ///     @c geometry::BoundingBox. This is more optimal than removing
-        ///     and re-inserting nodes.
+        ///     and re-inserting nodes. Optionally, a thread pool may be
+        ///     used to parallelize the operation.
         /// @return
         ///     A list of particles that no longer fit within the tree.
         std::list<std::shared_ptr<Particle>> Update();
-
-        /// Returns @c true if the @p particle is @p bounded @c Loosely or
-        /// @c Tightly by the tree, @c false otherwise.
-        [[nodiscard, maybe_unused]]
-        bool Contains(geometry::BoundingBox const& bounds) const;
 
         /// Return @c true if any particle within @c this tree is colliding with
         /// @p bounds, @c false otherwise.
@@ -79,12 +74,7 @@ namespace gravity
         /// @p bounds.
         [[nodiscard, maybe_unused]]
         std::list<std::shared_ptr<Particle>>
-        Colliding(geometry::BoundingBox const& bounds) const;
-
-        /// Returns @c true if the tree contains any particles, otherwise
-        /// @c false.
-        [[nodiscard, maybe_unused]]
-        bool Empty() const;
+            Colliding(geometry::BoundingBox const& bounds) const;
 
         /// Particles contained in @c this node of the tree.
         [[nodiscard, maybe_unused]]
@@ -93,11 +83,6 @@ namespace gravity
         /// The root @c Node of the tree.
         [[nodiscard]]
         Node const& Root() const { return root_; }
-
-        /// Bounds within which all children and particles of the tree are
-        /// contained.
-        [[nodiscard, maybe_unused]]
-        geometry::BoundingBox const& Bounds() const { return root_.Bounds(); }
 
         /// The looseness is a multiplier applied to the bounds of a node when
         /// determining whether a particle is contained by said node. Hence,
@@ -135,6 +120,18 @@ namespace gravity
     private:
         void GetParticles(Node const& node,
                           std::list<std::shared_ptr<Particle>>& particles) const;
+
+        /// Return @c true if any @c Particle contained by the @p node or its
+        /// ancestors is colliding with @p bounds, @c false otherwise.
+        [[nodiscard]]
+        bool IsColliding(geometry::BoundingBox const& bounds,
+                         Node const& node) const;
+
+        /// Insert particles in the @p node and its ancestors intersecting with
+        /// @p bounds into @p colliding.
+        void GetColliding(geometry::BoundingBox const& bounds,
+                          Node const& node,
+                          std::list<std::shared_ptr<Particle>>& colliding) const;
 
         Node root_; ///< Root node of the Octree
         double looseness_{ Node::DefaultLooseness }; ///< @c Octree::Looseness

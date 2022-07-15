@@ -115,25 +115,19 @@ namespace gravity
         return removed;
     }
 
-    bool Octree::Contains(geometry::BoundingBox const& bounds) const
-    {
-        return root_.Contains(bounds, looseness_);
-    }
-
     bool Octree::IsColliding(geometry::BoundingBox const& bounds) const
     {
-        return root_.IsColliding(bounds, looseness_);
+        return IsColliding(bounds, root_);
     }
 
     std::list<std::shared_ptr<Particle>>
-    Octree::Colliding(geometry::BoundingBox const& bounds) const
+        Octree::Colliding(geometry::BoundingBox const& bounds) const
     {
-        return root_.Colliding(bounds, looseness_);
-    }
+        std::list<std::shared_ptr<Particle>> colliding;
 
-    bool Octree::Empty() const
-    {
-        return root_.Empty();
+        GetColliding(bounds, root_, colliding);
+
+        return colliding;
     }
 
     std::list<std::shared_ptr<Particle>> Octree::Particles() const
@@ -167,6 +161,56 @@ namespace gravity
         for (auto const& child : node.Children())
         {
             GetParticles(child, particles);
+        }
+    }
+
+    bool Octree::IsColliding(geometry::BoundingBox const& bounds, // NOLINT(misc-no-recursion)
+                             Node const& node) const
+    {
+        if (!node.Bounds().Intersects(bounds, looseness_)) // particles might be loosely contained
+        {
+            return false;
+        }
+
+        for (auto const& particle : node.Particles())
+        {
+            if (particle && particle->Bounds().Intersects(bounds))
+            {
+                return true;
+            }
+        }
+
+        for (auto const& child : node.Children())
+        {
+            if(IsColliding(bounds, child))
+            {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    void Octree::GetColliding(geometry::BoundingBox const& bounds, // NOLINT(misc-no-recursion)
+                              Node const& node,
+                              std::list<std::shared_ptr<Particle>>& colliding) const
+    {
+        if (!node.Bounds().Intersects(bounds, looseness_)) // particles might be loosely contained
+        {
+            return;
+        }
+
+        for (auto const& particle : node.Particles())
+        {
+            if (particle && particle->Bounds().Intersects(bounds))
+            {
+                colliding.push_back(particle);
+            }
+        }
+
+        for (auto const& child : node.Children())
+        {
+            GetColliding(bounds, node, colliding);
         }
     }
 }

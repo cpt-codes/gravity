@@ -13,7 +13,7 @@ namespace gravity
                       double const min_width,
                       unsigned const capacity)
     {
-        if (!particle || !Contains(particle->Bounds(), looseness))
+        if (!particle || !bounds_.Contains(particle->Bounds(), looseness))
         {
             return false;
         }
@@ -189,49 +189,6 @@ namespace gravity
         swap(*this, root);
     }
 
-    bool Node::Contains(geometry::BoundingBox const& bounds, double const looseness) const
-    {
-        return bounds_.Contains(bounds, looseness);
-    }
-
-    bool Node::IsColliding(geometry::BoundingBox const& bounds, // NOLINT(misc-no-recursion)
-                           double const looseness) const
-    {
-        if (!bounds_.Intersects(bounds, looseness)) // particles might be loosely contained
-        {
-            return false;
-        }
-
-        for (auto const& particle : particles_)
-        {
-            if (particle && particle->Bounds().Intersects(bounds))
-            {
-                return true;
-            }
-        }
-
-        for (auto const& child : children_)
-        {
-            if(child.IsColliding(bounds, looseness))
-            {
-                return true;
-            }
-        }
-
-        return true;
-    }
-
-    std::list<std::shared_ptr<Particle>>
-        Node::Colliding(geometry::BoundingBox const& bounds,
-                        double const looseness) const
-    {
-        std::list<std::shared_ptr<Particle>> colliding;
-
-        GetColliding(bounds, colliding, looseness);
-
-        return colliding;
-    }
-
     bool Node::Empty() const // NOLINT(misc-no-recursion)
     {
         auto const empty = [](Node const& child) -> bool
@@ -359,7 +316,7 @@ namespace gravity
         {
             auto particle = *it;
 
-            if (!particle || !Contains(particle->Bounds(), looseness))
+            if (!particle || !bounds_.Contains(particle->Bounds(), looseness))
             {
                 removed.splice(removed.begin(), particles_, it++);
             }
@@ -414,28 +371,5 @@ namespace gravity
         }
 
         return has_particles;
-    }
-
-    void Node::GetColliding(geometry::BoundingBox const& bounds, // NOLINT(misc-no-recursion)
-                            std::list<std::shared_ptr<Particle>>& colliding,
-                            double const looseness) const
-    {
-        if (!bounds_.Intersects(bounds, looseness)) // particles might be loosely contained
-        {
-            return;
-        }
-
-        for (auto const& particle : particles_)
-        {
-            if (particle && particle->Bounds().Intersects(bounds))
-            {
-                colliding.push_back(particle);
-            }
-        }
-
-        for (auto const& child : children_)
-        {
-            child.GetColliding(bounds, colliding, looseness);
-        }
     }
 }

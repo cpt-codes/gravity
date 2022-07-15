@@ -85,28 +85,6 @@ namespace gravity
                   double min_width = DefaultMinWidth,
                   unsigned capacity = DefaultCapacity);
 
-        /// Returns @c true if the node or its ancestors loosely contain the
-        /// @p particle using @p looseness, @c false otherwise.
-        [[nodiscard]]
-        bool Contains(geometry::BoundingBox const& bounds,
-                      double looseness = DefaultLooseness) const;
-
-        /// Return @c true if any @c Particle contained by this node or its
-        /// ancestors is colliding with @p bounds, @c false otherwise. If the
-        /// node does not loosely intersect with the @p bounds, its ancestors
-        /// are not traversed.
-        [[nodiscard]]
-        bool IsColliding(geometry::BoundingBox const& bounds,
-                         double looseness = DefaultLooseness) const;
-
-        /// Return a list of particles within this node and its ancestors
-        /// colliding with @p bounds. If the node does not loosely intersect
-        /// with the @p bounds, its ancestors are not traversed.
-        [[nodiscard]]
-        std::list<std::shared_ptr<Particle>>
-            Colliding(geometry::BoundingBox const& bounds,
-                      double looseness = DefaultLooseness) const;
-
         /// Returns @c true if the Octree contains any particles, otherwise
         /// @c false.
         [[nodiscard]]
@@ -183,13 +161,6 @@ namespace gravity
         /// Returns @c true if only one of this node's children has particles,
         /// @c false otherwise.
         bool OneChildHasParticles(geometry::Orthant& child) const;
-
-        /// Insert particles in this node and its ancestors intersecting with
-        /// @p bounds into @p colliding. If the node does not loosely intersect
-        /// with the @p bounds, its ancestors are not traversed.
-        void GetColliding(geometry::BoundingBox const& bounds,
-                          std::list<std::shared_ptr<Particle>>& colliding,
-                          double looseness) const;
 
         /// Returns @c true if this node is a leaf node (i.e. no children),
         /// @c false otherwise.
