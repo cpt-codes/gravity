@@ -16,7 +16,7 @@ set(HEADER_LIST
     "${PROJECT_INCLUDE_DIR}/gravity/forces/IGravitationalField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/NewtonianField.h"
     "${PROJECT_INCLUDE_DIR}/gravity/forces/PlummerField.h"
-    "${PROJECT_INCLUDE_DIR}/gravity/except/async_error.h"
+    "${PROJECT_INCLUDE_DIR}/gravity/except/AsyncError.h"
     "${PROJECT_INCLUDE_DIR}/gravity/except/ErrorList.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Vector.h"
     "${PROJECT_INCLUDE_DIR}/gravity/geometry/Orthant.h"

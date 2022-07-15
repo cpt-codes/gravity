@@ -2,7 +2,6 @@
 #define GRAVITY_INCLUDE_GRAVITY_THREAD_THREADPOOL_H_
 
 #include <algorithm>
-#include <atomic>
 #include <future>
 #include <iterator>
 #include <memory>
@@ -11,7 +10,7 @@
 #include <thread>
 #include <vector>
 
-#include "gravity/except/async_error.h"
+#include "gravity/except/AsyncError.h"
 #include "gravity/except/ErrorList.h"
 #include "gravity/threads/ITask.h"
 #include "gravity/threads/Task.h"
@@ -61,8 +60,8 @@ namespace gravity::threads
 
         /// @brief
         ///     Applies the unary invocable @p func to each de-referenced
-        ///     iterator in the range @p range in @p task_count threads.
-        ///     Blocks until all tasks are complete.
+        ///     iterator in the @p range in @p task_count threads. Blocks
+        ///     until all tasks are complete.
         /// @throws
         ///     gravity::except::async_exception if an exception is thrown in
         ///     any of the threads executing the given unary invokable.
@@ -80,8 +79,8 @@ namespace gravity::threads
 
         /// @brief
         ///     Applies the unary invocable @p func to each de-referenced
-        ///     iterator in the range @p range in @p task_count threads.
-        ///     Returns immediately while the tasks are run asynchronously.
+        ///     iterator in the @p range in @p task_count threads. Returns
+        ///     immediately while the tasks are run asynchronously.
         template<std::ranges::random_access_range Range, typename Func>
             requires std::indirectly_unary_invocable<Func, std::ranges::iterator_t<Range>>
         [[maybe_unused]]

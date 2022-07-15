@@ -91,7 +91,7 @@ namespace gravity::threads
 
         if (!errors.Empty())
         {
-            throw except::async_error(errors.Message());
+            throw except::AsyncError(errors.Message());
         }
     }
 }
